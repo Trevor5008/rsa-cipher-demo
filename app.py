@@ -5,12 +5,25 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/', methods=['GET'])
+def hello_world():
+   return 'Hello, World!'
+
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
    data = request.json
-   message = data.get('message')
-   e = data.get('e')
-   n = data.get('n')
+
+   if not data:
+      return jsonify({ 'error': 'Missing JSON body' }), 400
+   
+   message = data.get('phrase')
+   public_key = data.get('publicKey')
+
+   if not public_key:
+      return jsonify({ 'error': 'Missing public key' }), 400
+   
+   e = public_key.get('e')
+   n = public_key.get('n')
 
    if not message or not e or not n:
       return jsonify({ 'error': 'Missing required parameters' }), 400

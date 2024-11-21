@@ -4,6 +4,6 @@ def rsa_encrypt(message, e, n):
    if message_as_number >= n:
       raise ValueError("Message is too large for the key size.")
    
-   cipher_text = pow(message_as_number, e, n)
+   cipher_text = str(pow(message_as_number, e, n))
 
    return cipher_text
