@@ -61,7 +61,6 @@ def decrypt_message():
       return jsonify({ 'error': 'Missing required parameters' }), 400
    try:
       decrypted_message = rsa_decrypt(int(encrypted_message), int(d), int(n))
-      print(decrypted_message)
       return jsonify({'decrypted_message': decrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400

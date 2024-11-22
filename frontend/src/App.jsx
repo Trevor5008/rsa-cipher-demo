@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 function App() {
    const [publicExp, setPublicExp] = useState(null);
    const [publicKey, setPublicKey] = useState({ n: "", e: publicExp});
-   const [privateKey, setPrivateKey] = useState({ n: "", d: "" });
+   const [privateKey, setPrivateKey] = useState({ n: publicKey.n || "", d: "" });
    const [phrase, setPhrase] = useState("");
    const [showPhrase, setShowPhrase] = useState(false);
    const [encryptedPhrase, setEncryptedPhrase] = useState("");
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
 
    useEffect(() => {
-      setPhrase("This is a random phrase to encrypt");
+      setPhrase("This ain't it, chief!");
       setPublicExp(65537);
    }, []);
 
@@ -28,9 +28,9 @@ function App() {
    }
 
    const handlePrivateKeyChange = (event) => {
+      setDecryptedPhrase("")
       const { value } = event.target;
-      const d = value.slice(publicKey.n.length);
-      setPrivateKey({ ...privateKey, n: publicKey.n, d });
+      setPrivateKey({ ...privateKey, n: publicKey.n, d: value });
    };
 
    const handleEncrypt = () => {
@@ -47,7 +47,6 @@ function App() {
             setEncryptedPhrase(phrase);
          })
          .catch((error) => {
-            setEncryptedPhrase("This ain't it chief");
             console.error("Error encrypting the phrase:", error);
          });
    };
@@ -108,8 +107,8 @@ function App() {
             <label htmlFor="e">Public Exp (e)</label>
             <input
                type="text"
-               id=""
-               name=""
+               id="publicExp"
+               name="publicExp"
                value={publicKey.e || ""}
                onChange={handlePublicExpChange}
                placeholder="Enter public exponent (e)"
@@ -136,8 +135,8 @@ function App() {
             name="privateKey"
             id="privateKey"
             className="border border-gray-300 p-2 rounded w-full mb-4"
-            placeholder="Enter private key (n + d)"
-            value={privateKey.n + privateKey.d}
+            placeholder="Enter private exponent (d)"
+            value={privateKey.d || ""}
             onChange={handlePrivateKeyChange}
          />
          <button
