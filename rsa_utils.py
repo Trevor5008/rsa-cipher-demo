@@ -1,5 +1,6 @@
-def rsa_encrypt(message, e, n):
-   message_as_number = int.from_bytes(message.encode('utf-8'), 'big')
+# Format default is utf-8, also works with ascii
+def rsa_encrypt(message, e, n, format='utf-8'):
+   message_as_number = int.from_bytes(message.encode(format), 'big')
 
    if message_as_number >= n:
       raise ValueError("Message is too large for the key size.")
@@ -11,9 +12,10 @@ def rsa_encrypt(message, e, n):
 # public exponent (e) constant
 e = 65537
 
-def rsa_decrypt(cipher_text, d, n):
+# Format defaults to utf-8, also works with ascii
+def rsa_decrypt(cipher_text, d, n, format='utf-8'):
    decrypted = pow(cipher_text, d, n)
 
-   decrypted_message = decrypted.to_bytes((decrypted.bit_length() + 7) // 8, 'big').decode('utf-8')
+   decrypted_message = decrypted.to_bytes((decrypted.bit_length() + 7) // 8, 'big').decode(format)
 
    return decrypted_message

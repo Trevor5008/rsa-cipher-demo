@@ -1,45 +1,56 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import PhraseModal from "./components/PhraseModal";
+import KeyInput from "./components/KeyInput";
 
 function App() {
-   const [publicExp, setPublicExp] = useState(null);
-   const [publicKey, setPublicKey] = useState({ n: "", e: publicExp});
-   const [privateKey, setPrivateKey] = useState({ n: publicKey.n || "", d: "" });
+   const [publicExp, setPublicExp] = useState(65537);
+   const [publicKey, setPublicKey] = useState({ n: "", e: publicExp });
+   const [privateKey, setPrivateKey] = useState({
+      n: publicKey.n || "",
+      d: "",
+   });
+   // format: utf-8 or ascii
+   const [format, setFormat] = useState("utf-8");
    const [phrase, setPhrase] = useState("");
-   const [showPhrase, setShowPhrase] = useState(false);
+   // Modal states
+   const [showPhraseModal, setShowPhraseModal] = useState(false);
+   const [showEncryptedModal, setShowEncryptedModal] = useState(false);
+   const [showDecryptedModal, setShowDecryptedModal] = useState(false);
+   // Encryption/Decryption phrases
    const [encryptedPhrase, setEncryptedPhrase] = useState("");
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
 
    useEffect(() => {
       setPhrase("This ain't it, chief!");
-      setPublicExp(65537);
    }, []);
 
    const handlePublicKeyChange = (event) => {
-      const { name, value } = event.target;
-      setDecryptedPhrase("")
-      setPublicKey({ ...publicKey, [name]: value });
+      setDecryptedPhrase("");
+      const { value } = event.target;
+      setPublicKey({ ...publicKey, n: value });
    };
 
    const handlePublicExpChange = (event) => {
       const { value } = event.target;
       setPublicExp(value);
       setPublicKey({ ...publicKey, e: value });
-   }
+   };
 
    const handlePrivateKeyChange = (event) => {
-      setDecryptedPhrase("")
+      setDecryptedPhrase("");
       const { value } = event.target;
       setPrivateKey({ ...privateKey, n: publicKey.n, d: value });
    };
 
-   const handleEncrypt = () => {
+   const handleEncrypt = (format) => {
       // Encrypt the phrase using the public key
       // and display the result
+      setFormat(format);
       axios
          .post(
             "http://127.0.0.1:5000/encrypt",
-            { publicKey, phrase },
+            { publicKey, phrase, format },
             { headers: { "Content-Type": "application/json" } }
          )
          .then((response) => {
@@ -54,16 +65,15 @@ function App() {
    const handleDecrypt = () => {
       // Decrypt the phrase using the private key
       // and display the result
-      console.log(privateKey)
       axios
          .post(
             "http://127.0.0.1:5000/decrypt",
-            { privateKey, encryptedPhrase },
+            { privateKey, encryptedPhrase, format },
             { headers: { "Content-Type": "application/json" } }
          )
          .then((response) => {
             const phrase = response.data["decrypted_message"];
-            console.log(phrase)
+            console.log(phrase);
             setDecryptedPhrase(phrase);
          })
          .catch((error) => {
@@ -71,35 +81,32 @@ function App() {
          });
    };
 
+   const handleSubmitKey = (type) => {
+      console.log("Submitting key for", type);
+      type === "public"
+         ? handleEncrypt(format)
+         : handleDecrypt();
+   }
+
    return (
       <>
          {/* Heading */}
          <h1>RSA Cipher Demo</h1>
          {/* Secret phrase */}
-         <h2>Phrase: {showPhrase ? phrase : "***********"}</h2>
+         <h2>Phrase: {showPhraseModal ? phrase : "***********"}</h2>
+         {/* Phrase modal */}
          <div>
-            <label 
-               htmlFor="mod"
-            >
-               Modulus (n)
-            </label>
-            <textarea
-               name="n"
-               id="mod"
-               onChange={handlePublicKeyChange}
-               className="border border-gray-300 p-2 rounded w-full mb-4"
-               value={publicKey.n || ""}
-               placeholder="Enter modulus (n)"
-            />
-            {showPhrase && (
-               <div className="text-sm text-gray-500 z-20" hidden={!showPhrase}>
-                  Phrase: {phrase}
-               </div>
+            {showPhraseModal && (
+               <PhraseModal
+                  phrase={phrase}
+                  closeModal={() => setShowPhraseModal(false)}
+               />
             )}
          </div>
+         {/* Show phrase modal button */}
          <button
             className="m-2 bg-red-500 rounded-lg p-2"
-            onClick={() => setShowPhrase(!showPhrase)}
+            onClick={() => setShowPhraseModal(true)}
          >
             Show Phrase
          </button>
@@ -111,17 +118,28 @@ function App() {
                name="publicExp"
                value={publicKey.e || ""}
                onChange={handlePublicExpChange}
-               placeholder="Enter public exponent (e)"
+               placeholder={publicExp || "Enter public exponent (e)"}
                className="border border-gray-300 p-2 rounded w-full mb-4"
             />
          </div>
-         {/* Encrypt button */}
-         <button
-            className="m-2 bg-blue-500 rounded-lg p-2"
-            onClick={() => handleEncrypt()}
-         >
-            Encrypt
-         </button>
+         {/* Encrypt buttons */}
+         <div>
+            {showEncryptedModal ? (
+               <KeyInput
+                  type="public"
+                  token={publicKey.n || ""}
+                  handleKeyChange={(e) => handlePublicKeyChange(e)}
+                  closeModal={() => setShowEncryptedModal(false)}
+                  submitKey={handleSubmitKey}
+               />
+            ) : null}
+            <button
+               className="m-2 bg-blue-500 rounded-lg p-2"
+               onClick={() => setShowEncryptedModal(true)}
+            >
+               Encrypt
+            </button>
+         </div>
          {/* Encrypted text display (integers) */}
          <textarea
             name="encrypted"
@@ -130,21 +148,24 @@ function App() {
             readOnly
             value={encryptedPhrase}
          />
-         {/* Private key input */}
-         <textarea
-            name="privateKey"
-            id="privateKey"
-            className="border border-gray-300 p-2 rounded w-full mb-4"
-            placeholder="Enter private exponent (d)"
-            value={privateKey.d || ""}
-            onChange={handlePrivateKeyChange}
-         />
-         <button
-            className="m-2 bg-green-500 rounded-lg p-2"
-            onClick={() => handleDecrypt()}
-         >
-            Decrypt
-         </button>
+         {/* Decrypt button */}
+         <div>
+            {showDecryptedModal ? (
+               <KeyInput
+                  type="private"
+                  token={privateKey.d || ""}
+                  handleKeyChange={(e) => handlePrivateKeyChange(e)}
+                  closeModal={() => setShowDecryptedModal(false)}
+                  submitKey={handleSubmitKey}
+               />
+            ) : null}
+            <button
+               className="m-2 bg-blue-500 rounded-lg p-2"
+               onClick={() => setShowDecryptedModal(true)}
+            >
+               Decrypt
+            </button>
+         </div>
          {/* Decrypted text display */}
          <textarea
             name="decrypted"
