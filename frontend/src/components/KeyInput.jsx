@@ -12,17 +12,19 @@ export default function KeyInput({ type, token, handleKeyChange, closeModal, sub
                className="border border-gray-300 p-2 rounded w-full mb-4"
                value={token || ""}
                placeholder={message}
+               rows={7}
+               cols={70}
             />
-           <div>
+           <div className="flex justify-between">
            <button
                onClick={closeModal}
-               className="bg-blue-500 text-white p-2 rounded-lg"
+               className="bg-blue-500 text-white p-2 rounded-lg ml-2"
             >
                Cancel
             </button>
             <button
                onClick={() => submitKey(type)}
-               className="bg-blue-500 text-white p-2 rounded-lg"
+               className="bg-blue-500 text-white p-2 rounded-lg mr-2"
             >
                Submit
             </button>

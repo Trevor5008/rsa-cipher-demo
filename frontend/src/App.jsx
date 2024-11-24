@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import phrases from "./data/phrases";
 import PhraseModal from "./components/PhraseModal";
 import KeyInput from "./components/KeyInput";
 
@@ -10,8 +11,6 @@ function App() {
       n: publicKey.n || "",
       d: "",
    });
-   // format: utf-8 or ascii
-   const [format, setFormat] = useState("utf-8");
    const [phrase, setPhrase] = useState("");
    // Modal states
    const [showPhraseModal, setShowPhraseModal] = useState(false);
@@ -22,8 +21,13 @@ function App() {
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
 
    useEffect(() => {
-      setPhrase("This ain't it, chief!");
+      loadPhrase()
    }, []);
+
+   const loadPhrase = () => {
+      const phraseIndex = Math.floor(Math.random() * phrases.length);
+      setPhrase(phrases[phraseIndex]);
+   }
 
    const handlePublicKeyChange = (event) => {
       setDecryptedPhrase("");
@@ -43,19 +47,21 @@ function App() {
       setPrivateKey({ ...privateKey, n: publicKey.n, d: value });
    };
 
-   const handleEncrypt = (format) => {
+   const handleEncrypt = () => {
       // Encrypt the phrase using the public key
       // and display the result
-      setFormat(format);
       axios
          .post(
             "http://127.0.0.1:5000/encrypt",
-            { publicKey, phrase, format },
+            { publicKey, phrase },
             { headers: { "Content-Type": "application/json" } }
          )
          .then((response) => {
             const phrase = response.data["encrypted_message"];
             setEncryptedPhrase(phrase);
+         })
+         .then(() => {
+            setShowEncryptedModal(false);
          })
          .catch((error) => {
             console.error("Error encrypting the phrase:", error);
@@ -68,23 +74,38 @@ function App() {
       axios
          .post(
             "http://127.0.0.1:5000/decrypt",
-            { privateKey, encryptedPhrase, format },
+            { privateKey, encryptedPhrase},
             { headers: { "Content-Type": "application/json" } }
          )
          .then((response) => {
             const phrase = response.data["decrypted_message"];
-            console.log(phrase);
             setDecryptedPhrase(phrase);
+         })
+         .then(() => {
+            setShowDecryptedModal(false);
          })
          .catch((error) => {
             console.error("Error decrypting the phrase:", error);
          });
    };
 
+   const addPhrase = () => {
+      setShowPhraseModal(true)
+   }
+
+   const handlePhraseChange = (event) => {
+      const { value } = event.target;
+      setPhrase(value);
+   }
+
+   const submitPhrase = () => {
+      setPhrase(phrase)
+      setShowPhraseModal(false)
+   }
+
    const handleSubmitKey = (type) => {
-      console.log("Submitting key for", type);
       type === "public"
-         ? handleEncrypt(format)
+         ? handleEncrypt()
          : handleDecrypt();
    }
 
@@ -94,22 +115,23 @@ function App() {
          <h1>RSA Cipher Demo</h1>
          {/* Secret phrase */}
          <h2>Phrase: {showPhraseModal ? phrase : "***********"}</h2>
+         <button 
+            className="m-2 bg-red-500 rounded-lg p-2"
+            onClick={addPhrase}
+         >
+               New Phrase
+         </button>
          {/* Phrase modal */}
          <div>
             {showPhraseModal && (
                <PhraseModal
                   phrase={phrase}
+                  handlePhraseChange={handlePhraseChange}
+                  submitPhrase={submitPhrase}
                   closeModal={() => setShowPhraseModal(false)}
                />
             )}
          </div>
-         {/* Show phrase modal button */}
-         <button
-            className="m-2 bg-red-500 rounded-lg p-2"
-            onClick={() => setShowPhraseModal(true)}
-         >
-            Show Phrase
-         </button>
          <div>
             <label htmlFor="e">Public Exp (e)</label>
             <input
@@ -166,7 +188,7 @@ function App() {
                Decrypt
             </button>
          </div>
-         {/* Decrypted text display */}
+         {/* Decrypted text display (original phrase)*/}
          <textarea
             name="decrypted"
             id="decrypted"

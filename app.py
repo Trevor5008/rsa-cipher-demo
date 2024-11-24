@@ -20,7 +20,6 @@ def encrypt_message():
 
    message = data.get('phrase')
    public_key = data.get('publicKey')
-   format = data.get('format')
 
    if not public_key:
       return jsonify({'error': 'Missing public key'}), 400
@@ -34,7 +33,7 @@ def encrypt_message():
       return jsonify({'error': 'Missing required parameters'}), 400
 
    try:
-      encrypted_message = rsa_encrypt(message, int(e), int(n), format)
+      encrypted_message = rsa_encrypt(message, int(e), int(n))
       return jsonify({'encrypted_message': encrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400
@@ -49,7 +48,6 @@ def decrypt_message():
 
    encrypted_message = data.get('encryptedPhrase')
    private_key = data.get('privateKey')
-   format = data.get('format')
 
    if not private_key:
       return jsonify({'error': 'Missing private key'}), 400
@@ -68,7 +66,7 @@ def decrypt_message():
       return jsonify({'error': 'Missing required parameters'}), 400
    try:
       decrypted_message = rsa_decrypt(
-          int(encrypted_message), int(d), int(n), format)
+          int(encrypted_message), int(d), int(n))
       return jsonify({'decrypted_message': decrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400
