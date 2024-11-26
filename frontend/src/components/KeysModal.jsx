@@ -9,11 +9,12 @@ export default function KeysModal({
    handleQChange,
    p,
    q,
-   closeModal,
+   handleKeysSubmit,
+   closeKeysModal,
 }) {
-   const [pValid, setPValid] = useState(false);
-   const [qValid, setQValid] = useState(false);
-   const [coPrimeValid, setCoPrimeValid] = useState(false);
+   const [pValid, setPValid] = useState(true);
+   const [qValid, setQValid] = useState(true);
+   const [coPrimeValid, setCoPrimeValid] = useState(true);
 
    // Validate individual prime values
    const validatePrime = async (value, type) => {
@@ -25,7 +26,8 @@ export default function KeysModal({
          );
 
          const isValid = response.data["valid"];
-         
+         console.log(`Validating ${type}:`, isValid);
+
          if (type === "p") {
             setPValid(isValid);
          } else if (type === "q") {
@@ -34,6 +36,11 @@ export default function KeysModal({
 
          return response.data["valid"];
       } catch (error) {
+         if (type === "p") {
+            setPValid(false);
+         } else if (type === "q") {
+            setQValid(false);
+         }
          console.error(`Error validating ${type}:`, error);
          return false;
       }
@@ -41,7 +48,10 @@ export default function KeysModal({
 
    const validateCoprime = () => {
       setCoPrimeValid(pValid && qValid && p !== q);
-   }
+      // if (p === q || !pValid || !qValid) {
+      //    setCoPrimeValid(false);
+      // }
+   };
 
    // Handle blur events for p and q
    const handlePBlur = async () => {
@@ -62,15 +72,19 @@ export default function KeysModal({
 
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-         <div className="bg-white p-8 rounded-lg w-1/3 border-2 border-red-600">
-            <label className="block text-lg font-bold">Public Exponent (e)</label>
-            <input
-               type="text"
-               placeholder="Public Exponent"
-               value={publicExp || ""}
-               onChange={handlePublicExpChange}
-               className="border-2 border-gray-400 p-2 rounded-lg w-full"
-            />
+         <div className="bg-white p-8 rounded-lg w-1/3 border-2">
+            <div className="flex justify-between">
+               <label className="block text-md font-bold flex-3">
+                  Public Exp (e)
+               </label>
+               <input
+                  type="text"
+                  placeholder="Public Exponent"
+                  value={publicExp || ""}
+                  onChange={handlePublicExpChange}
+                  className="w-2 flex-1 border-2 border-gray-400 p-1 rounded-lg"
+               />
+            </div>
             <label className="block text-lg font-bold mt-4">P Value</label>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
@@ -79,6 +93,7 @@ export default function KeysModal({
                value={p || ""}
                onChange={handlePChange}
                onBlur={handlePBlur}
+               rows={7}
                placeholder="Enter a prime number for p"
             />
             {!pValid && <p className="text-red-500 text-sm">Invalid P value</p>}
@@ -91,17 +106,20 @@ export default function KeysModal({
                value={q || ""}
                onChange={handleQChange}
                onBlur={handleQBlur}
+               rows={7}
                placeholder="Enter a prime number for q"
             />
             {!qValid && <p className="text-red-500 text-sm">Invalid Q value</p>}
 
             {!coPrimeValid && (
-               <p className="text-red-500 text-sm mt-2">P and Q must be coprime</p>
+               <p className="text-red-500 text-sm mt-2">
+                  P and Q must be coprime
+               </p>
             )}
 
             <div className="flex justify-between mt-4">
                <button
-                  onClick={closeModal}
+                  onClick={closeKeysModal}
                   className="bg-blue-500 text-white p-2 rounded-lg ml-2"
                >
                   Close
@@ -109,6 +127,7 @@ export default function KeysModal({
                <button
                   className="bg-green-500 text-white p-2 rounded-lg mr-2"
                   disabled={!pValid || !qValid || !coPrimeValid}
+                  onClick={handleKeysSubmit}
                >
                   Submit
                </button>

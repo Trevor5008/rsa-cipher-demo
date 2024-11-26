@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime
+from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -25,6 +25,36 @@ def validate_prime():
       return jsonify({'error': 'Invalid prime number'}), 400
 
    return jsonify({'message': 'Valid prime number', 'valid': True})
+
+@app.route('/submit-keys', methods=['POST', 'OPTIONS'])
+def submit_keys():
+   if request.method == 'OPTIONS':
+      return jsonify({'message': 'Options request received'}), 200
+
+   data = request.json
+
+   if not data:
+      return jsonify({'error': 'Missing JSON body'}), 400
+
+   p = int(data.get('p'))
+   q = int(data.get('q'))
+   # calculate modulus (n)
+   n = p * q
+   # calculate totient (phi)
+   phi = (p - 1) * (q - 1)
+   # public exponent (e) constant
+   e = int(data.get('publicExp'))
+   # private exponent (d) calculation
+   d = find_mod_inverse(e, phi)
+   print(d)
+
+   public_key = {'e': e, 'n': str(n)}
+   private_key = {'d': str(d), 'n': str(n)}
+
+   return jsonify({
+      'publicKey': public_key, 
+      'privateKey': private_key
+   })
 
 
 @app.route('/encrypt', methods=['POST'])
