@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from rsa_utils import rsa_encrypt, rsa_decrypt
+from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -9,6 +9,22 @@ CORS(app)
 @app.route('/', methods=['GET'])
 def hello_world():
    return 'Hello, World!'
+
+
+@app.route('/validate-prime', methods=['POST'])
+def validate_prime():
+   data = request.json
+
+   if not data:
+      return jsonify({'error': 'Missing JSON body'}), 400
+
+   val = data.get('val')
+   is_valid = validate_isprime(int(val))
+
+   if not is_valid:
+      return jsonify({'error': 'Invalid prime number'}), 400
+
+   return jsonify({'message': 'Valid prime number', 'valid': True})
 
 
 @app.route('/encrypt', methods=['POST'])

@@ -1,3 +1,13 @@
+from sympy import isprime
+
+# Validate that val is a prime number and that it is 512 bits in length
+def validate_isprime(val):
+   is_prime = isprime(val)
+
+   # validate whether val is 512 bits
+   return is_prime and len(bin(val)[2:]) >= 511
+
+
 # Format default is utf-8, also works with ascii
 def rsa_encrypt(message, e, n):
    message_as_number = int.from_bytes(message.encode("ascii"), 'big')
