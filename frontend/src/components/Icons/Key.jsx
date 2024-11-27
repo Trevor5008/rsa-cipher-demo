@@ -4,11 +4,11 @@ export default function Key({ hasKeys}) {
    return (
       <svg
          xmlns="http://www.w3.org/2000/svg"
-         fill={hasKeys ? "currentColor" : "none"}
+         fill={hasKeys ? "none" : "currentColor"}
          viewBox="0 0 24 24"
          strokeWidth={1.5}
          stroke="currentColor"
-         className="size-6"
+         className={`size-6 ${!hasKeys ? "text-gray-300 cursor-not-allowed" : "fill-yellow-500 cursor-pointer"}`}
       >
          <path
             strokeLinecap="round"
