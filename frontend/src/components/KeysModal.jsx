@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
+import Close from "./Icons/Close";
 
 /* eslint-disable react/prop-types */
 export default function KeysModal({
@@ -11,6 +12,7 @@ export default function KeysModal({
    q,
    generatePrimes,
    handleKeysSubmit,
+   clearPandQ,
    closeKeysModal,
 }) {
    const [pValid, setPValid] = useState(true);
@@ -70,20 +72,23 @@ export default function KeysModal({
 
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-         <div className="bg-white p-8 rounded-lg w-1/3 border-2">
-            <div className="flex justify-between">
-               <label className="block text-md font-bold flex-3">
-                  Public Exp (e)
+         <div className="bg-white py-8 px-8 rounded-lg w-full max-w-lg border-2">
+            <div className="flex justify-between space-x-4 items-center mb-4">
+               <div className="flex items-center space-x-6">
+               <label className="block text-md font-bold">
+                  Public Exponent (e)
                </label>
                <input
                   type="text"
                   placeholder="Public Exponent"
                   value={publicExp || ""}
                   onChange={handlePublicExpChange}
-                  className="w-2 flex-1 border-2 border-gray-400 p-1 rounded-lg"
+                  className="border-2 border-gray-400 p-1 rounded-lg w-1/4 text-center mr-2"
                />
+               </div>
+               <Close closeModal={closeKeysModal} />
             </div>
-            <label className="block text-lg font-bold mt-4">P Value</label>
+            <label className="block text-lg font-bold my-2">P Value</label>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   pValid ? "border-gray-400" : "border-red-500"
@@ -96,7 +101,7 @@ export default function KeysModal({
             />
             {!pValid && <p className="text-red-500 text-sm">Invalid P value</p>}
 
-            <label className="block text-lg font-bold mt-4">Q Value</label>
+            <label className="block text-lg font-bold mt-4 mb-2">Q Value</label>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   qValid ? "border-gray-400" : "border-red-500"
@@ -117,10 +122,10 @@ export default function KeysModal({
 
             <div className="flex justify-between mt-4">
                <button
-                  onClick={closeKeysModal}
+                  onClick={clearPandQ}
                   className="bg-blue-500 text-white p-2 rounded-lg ml-2"
                >
-                  Close
+                  Clear
                </button>
                <button
                   onClick={generatePrimes}
