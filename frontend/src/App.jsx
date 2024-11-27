@@ -1,201 +1,196 @@
+import { useState } from "react";
+import KeysModal from "./components/KeysModal";
+import TextModal from "./components/TextModal";
 import axios from "axios";
-import { useState, useEffect } from "react";
-import phrases from "./data/phrases";
-import PhraseModal from "./components/PhraseModal";
-import KeyInput from "./components/KeyInput";
 
 function App() {
    const [publicExp, setPublicExp] = useState(65537);
-   const [publicKey, setPublicKey] = useState({ n: "", e: publicExp });
-   const [privateKey, setPrivateKey] = useState({
-      n: publicKey.n || "",
-      d: "",
-   });
-   const [phrase, setPhrase] = useState("");
-   // Modal states
-   const [showPhraseModal, setShowPhraseModal] = useState(false);
-   const [showEncryptedModal, setShowEncryptedModal] = useState(false);
-   const [showDecryptedModal, setShowDecryptedModal] = useState(false);
-   // Encryption/Decryption phrases
+   const [p, setP] = useState("");
+   const [q, setQ] = useState("");
+   const [showTextModal, setShowTextModal] = useState(false);
+   const [textType, setTextType] = useState("");
+
+   const [mod, setMod] = useState("");
+   const [privateExp, setPrivateExp] = useState("");
+   // // Flags for key presence
+   // const [hasPublicKey, setHasPublicKey] = useState(false);
+   // const [hasPrivateKey, setHasPrivateKey] = useState(false);
+   // // Flag for encryption readiness
+   // const [readyToEncrypt, setReadyToEncrypt] = useState(hasPublicKey && hasPrivateKey);
+   // Phrases to encrypt/decrypt
+   const [encryptPhrase, setEncryptPhrase] = useState("");
+   const [decryptPhrase, setDecryptPhrase] = useState("");
+   // Encrypted/Decrypted text
    const [encryptedPhrase, setEncryptedPhrase] = useState("");
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
 
-   useEffect(() => {
-      loadPhrase()
-   }, []);
+   // Modals
+   const [showKeysModal, setShowKeysModal] = useState(false);
 
-   const loadPhrase = () => {
-      const phraseIndex = Math.floor(Math.random() * phrases.length);
-      setPhrase(phrases[phraseIndex]);
+   const openKeysModal = () => {
+      setShowKeysModal(true);
+   };
+
+   const handlePublicExpChange = (e) => {
+      setPublicExp(e.target.value);
+   };
+
+   const handlePChange = (e) => {
+      setP(e.target.value);
+   };
+
+   const handleQChange = (e) => {
+      setQ(e.target.value);
+   };
+
+   const handleTextChange = (e) => {
+      textType === "encrypt"
+         ? setEncryptPhrase(e.target.value)
+         : setDecryptPhrase(e.target.value);
+   };
+
+   const closeKeysModal = () => {
+      setShowKeysModal(false);
+   };
+
+   const openTextModal = (type) => {
+      setTextType(type);
+      setShowTextModal(true);
+   };
+
+   const closeTextModal = () => {
+      setShowTextModal(false);
+   };
+
+   const handleTextReset = () => {
+      if (textType === "encrypt") {
+         setEncryptPhrase("");
+         setEncryptedPhrase("");
+      } else {
+         setDecryptPhrase("");
+         setDecryptedPhrase("");
+      }
    }
 
-   const handlePublicKeyChange = (event) => {
-      setDecryptedPhrase("");
-      const { value } = event.target;
-      setPublicKey({ ...publicKey, n: value });
-   };
-
-   const handlePublicExpChange = (event) => {
-      const { value } = event.target;
-      setPublicExp(value);
-      setPublicKey({ ...publicKey, e: value });
-   };
-
-   const handlePrivateKeyChange = (event) => {
-      setDecryptedPhrase("");
-      const { value } = event.target;
-      setPrivateKey({ ...privateKey, n: publicKey.n, d: value });
-   };
-
-   const handleEncrypt = () => {
-      // Encrypt the phrase using the public key
-      // and display the result
+   const handleKeysSubmit = () => {
+      console.log("Submitting keys");
+      closeKeysModal();
       axios
          .post(
-            "http://127.0.0.1:5000/encrypt",
-            { publicKey, phrase },
+            "http://127.0.0.1:5000/submit-keys",
+            { p: p, q: q, publicExp: publicExp },
             { headers: { "Content-Type": "application/json" } }
          )
          .then((response) => {
-            const phrase = response.data["encrypted_message"];
-            setEncryptedPhrase(phrase);
-         })
-         .then(() => {
-            setShowEncryptedModal(false);
+            const { publicKey, privateKey } = response.data;
+            setMod(publicKey.n);
+            setPrivateExp(privateKey.d);
          })
          .catch((error) => {
-            console.error("Error encrypting the phrase:", error);
+            console.log(error);
          });
    };
 
-   const handleDecrypt = () => {
-      // Decrypt the phrase using the private key
-      // and display the result
+   const generatePrimes = () => {
+      console.log("Generating primes");
       axios
-         .post(
-            "http://127.0.0.1:5000/decrypt",
-            { privateKey, encryptedPhrase},
-            { headers: { "Content-Type": "application/json" } }
-         )
+         .get("http://127.0.0.1:5000/generate-primes")
          .then((response) => {
-            const phrase = response.data["decrypted_message"];
-            setDecryptedPhrase(phrase);
-         })
-         .then(() => {
-            setShowDecryptedModal(false);
+            const { p, q, mod, d } = response.data;
+            setP(p);
+            setQ(q);
+            setMod(mod);
+            setPrivateExp(d);
          })
          .catch((error) => {
-            console.error("Error decrypting the phrase:", error);
+            console.log(error);
          });
+      console.log(p, q, mod, privateExp);
    };
 
-   const addPhrase = () => {
-      setShowPhraseModal(true)
-   }
-
-   const handlePhraseChange = (event) => {
-      const { value } = event.target;
-      setPhrase(value);
-   }
-
-   const submitPhrase = () => {
-      setPhrase(phrase)
-      setShowPhraseModal(false)
-   }
-
-   const handleSubmitKey = (type) => {
-      type === "public"
-         ? handleEncrypt()
-         : handleDecrypt();
-   }
+   const handleTextSubmit = () => {
+      closeTextModal();
+      const route = textType === "encrypt" ? "encrypt" : "decrypt";
+      const payload =
+         textType === "encrypt"
+            ? { text: encryptPhrase, publicExp, mod }
+            : { text: decryptPhrase, privateExp, mod };
+      axios
+         .post(`http://127.0.0.1:5000/${route}`, payload, {
+            headers: { "Content-Type": "application/json" },
+         })
+         .then((response) => {
+            if (textType === "encrypt") {
+               const text = response.data["encrypted_message"];
+               setEncryptedPhrase(text);
+            } else {
+               const text = response.data["decrypted_message"];
+               setDecryptedPhrase(text);
+            }
+         })
+         .catch((error) => {
+            console.log(error);
+         });
+   };
 
    return (
       <>
          {/* Heading */}
-         <h1>RSA Cipher Demo</h1>
-         {/* Secret phrase */}
-         <h2>Phrase: {showPhraseModal ? phrase : "***********"}</h2>
-         <button 
-            className="m-2 bg-red-500 rounded-lg p-2"
-            onClick={addPhrase}
+         <h1 className=" bold">RSA Demo</h1>
+         <button
+            className="m-2 bg-blue-500 rounded-lg p-2"
+            onClick={openKeysModal}
          >
-               New Phrase
+            Enter Key Data
          </button>
-         {/* Phrase modal */}
-         <div>
-            {showPhraseModal && (
-               <PhraseModal
-                  phrase={phrase}
-                  handlePhraseChange={handlePhraseChange}
-                  submitPhrase={submitPhrase}
-                  closeModal={() => setShowPhraseModal(false)}
-               />
-            )}
-         </div>
-         <div>
-            <label htmlFor="e">Public Exp (e)</label>
-            <input
-               type="text"
-               id="publicExp"
-               name="publicExp"
-               value={publicKey.e || ""}
-               onChange={handlePublicExpChange}
-               placeholder={publicExp || "Enter public exponent (e)"}
-               className="border border-gray-300 p-2 rounded w-full mb-4"
+         {showKeysModal ? (
+            <KeysModal
+               publicExp={publicExp}
+               handlePublicExpChange={handlePublicExpChange}
+               handlePChange={handlePChange}
+               handleQChange={handleQChange}
+               p={p}
+               q={q}
+               handleKeysSubmit={handleKeysSubmit}
+               generatePrimes={generatePrimes}
+               closeKeysModal={closeKeysModal}
             />
-         </div>
-         {/* Encrypt buttons */}
-         <div>
-            {showEncryptedModal ? (
-               <KeyInput
-                  type="public"
-                  token={publicKey.n || ""}
-                  handleKeyChange={(e) => handlePublicKeyChange(e)}
-                  closeModal={() => setShowEncryptedModal(false)}
-                  submitKey={handleSubmitKey}
-               />
-            ) : null}
-            <button
-               className="m-2 bg-blue-500 rounded-lg p-2"
-               onClick={() => setShowEncryptedModal(true)}
-            >
-               Encrypt
-            </button>
-         </div>
-         {/* Encrypted text display (integers) */}
+         ) : null}
+         <button
+            className="m-2 bg-blue-500 rounded-lg p-2"
+            type="encrypt"
+            onClick={() => openTextModal("encrypt")}
+         >
+            Enter Text to Encrypt
+         </button>
+         <button
+            className="m-2 bg-blue-500 rounded-lg p-2"
+            type="decrypt"
+            onClick={() => openTextModal("decrypt")}
+         >
+            Enter Text to Decrypt
+         </button>
+         {showTextModal ? (
+            <TextModal
+               type={textType}
+               text={textType === "encrypt" ? encryptPhrase : decryptPhrase}
+               handleTextChange={handleTextChange}
+               closeTextModal={closeTextModal}
+               clearText={handleTextReset}
+               handleTextSubmit={handleTextSubmit}
+            />
+         ) : null}
          <textarea
-            name="encrypted"
-            id="encrypted"
-            className="border border-gray-300 p-2 rounded w-full mb-4"
-            readOnly
-            value={encryptedPhrase}
+            className="border-2 p-2 rounded-lg w-full"
+            value={textType === "encrypt" ? encryptedPhrase : decryptedPhrase}
+            rows={7}
+            placeholder={
+               textType === "encrypt" ? "Encrypted text" : "Decrypted text"
+            }
          />
-         {/* Decrypt button */}
-         <div>
-            {showDecryptedModal ? (
-               <KeyInput
-                  type="private"
-                  token={privateKey.d || ""}
-                  handleKeyChange={(e) => handlePrivateKeyChange(e)}
-                  closeModal={() => setShowDecryptedModal(false)}
-                  submitKey={handleSubmitKey}
-               />
-            ) : null}
-            <button
-               className="m-2 bg-blue-500 rounded-lg p-2"
-               onClick={() => setShowDecryptedModal(true)}
-            >
-               Decrypt
-            </button>
-         </div>
-         {/* Decrypted text display (original phrase)*/}
-         <textarea
-            name="decrypted"
-            id="decrypted"
-            className="border border-gray-300 p-2 rounded w-full mb-4"
-            readOnly
-            value={decryptedPhrase}
-         />
+         <button onClick={handleTextReset} className="m-2 bg-blue-500 rounded-lg p-2">
+            Clear Text
+         </button>
       </>
    );
 }
