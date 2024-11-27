@@ -1,9 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify
 from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="frontend/dist", static_url_path="")
 CORS(app)
+
+@app.route('/')
+def serve_index():
+   return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/generate-primes', methods=['GET'])
 def generate_primes():
@@ -111,6 +115,10 @@ def decrypt_message():
       return jsonify({'decrypted_message': decrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400
+   
+# Handle 404 for React routing
+def not_found(e):
+   return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
    app.run(debug=True)
