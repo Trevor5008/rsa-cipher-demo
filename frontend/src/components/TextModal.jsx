@@ -10,6 +10,7 @@ export default function TextModal({
 }) {
    const [textValid, setTextValid] = useState(true);
 
+   // Validate text input
    const handleTextBlur = async () => {
       console.log("Validating text:", text);
       if (type === "decrypt") {
@@ -25,7 +26,6 @@ export default function TextModal({
       }
    }
 
-   console.log(text)
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
          <div className="bg-white p-8 rounded-lg w-1/3 border-2">

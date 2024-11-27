@@ -11,15 +11,19 @@ function App() {
    const [textType, setTextType] = useState("");
 
    const [mod, setMod] = useState("");
-   const [privateExp, setPrivateExp] = useState("")
+   const [privateExp, setPrivateExp] = useState("");
    // // Flags for key presence
    // const [hasPublicKey, setHasPublicKey] = useState(false);
    // const [hasPrivateKey, setHasPrivateKey] = useState(false);
    // // Flag for encryption readiness
    // const [readyToEncrypt, setReadyToEncrypt] = useState(hasPublicKey && hasPrivateKey);
-   // Encryption/Decryption phrases
+   // Phrases to encrypt/decrypt
+   const [encryptPhrase, setEncryptPhrase] = useState("");
+   const [decryptPhrase, setDecryptPhrase] = useState("");
+   // Encrypted/Decrypted text
    const [encryptedPhrase, setEncryptedPhrase] = useState("");
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
+
    // Modals
    const [showKeysModal, setShowKeysModal] = useState(false);
 
@@ -41,25 +45,9 @@ function App() {
 
    const handleTextChange = (e) => {
       textType === "encrypt"
-         ? setEncryptedPhrase(e.target.value)
-         : setDecryptedPhrase(e.target.value);
-   }
-
-   // const validatePrimes = () => {
-   // const pVal = parseInt(p)
-   // const qVal = parseInt(q)
-   // axios
-   //    .post("http://localhost:5000/validate-prime/",
-   //       { p: pVal, q: qVal },
-   //       { headers: { "Content-Type": "application/json" } }
-   //    )
-   //    .then((response) => {
-   //       console.log(response.data)
-   //    })
-   //    .catch((error) => {
-   //       console.log(error)
-   //    })
-   // }
+         ? setEncryptPhrase(e.target.value)
+         : setDecryptPhrase(e.target.value);
+   };
 
    const closeKeysModal = () => {
       setShowKeysModal(false);
@@ -95,7 +83,8 @@ function App() {
 
    const generatePrimes = () => {
       console.log("Generating primes");
-      axios.get("http://127.0.0.1:5000/generate-primes")
+      axios
+         .get("http://127.0.0.1:5000/generate-primes")
          .then((response) => {
             const { p, q, mod, d } = response.data;
             setP(p);
@@ -106,34 +95,33 @@ function App() {
          .catch((error) => {
             console.log(error);
          });
-         console.log(p, q, mod, privateExp)
-      }
+      console.log(p, q, mod, privateExp);
+   };
 
    const handleTextSubmit = () => {
       closeTextModal();
       const route = textType === "encrypt" ? "encrypt" : "decrypt";
-      const payload = textType === "encrypt"
-         ? { text: encryptedPhrase, publicExp, mod }
-         : { text: decryptedPhrase, privateExp, mod }
+      const payload =
+         textType === "encrypt"
+            ? { text: encryptPhrase, publicExp, mod }
+            : { text: decryptPhrase, privateExp, mod };
       axios
-         .post(
-            `http://127.0.0.1:5000/${route}`,
-            payload,
-            { headers: { "Content-Type": "application/json" } }
-         )
+         .post(`http://127.0.0.1:5000/${route}`, payload, {
+            headers: { "Content-Type": "application/json" },
+         })
          .then((response) => {
             if (textType === "encrypt") {
-               const text = response.data["decrypted_message"]
-               setDecryptedPhrase(text);
-            } else {
-               const text = response.data["encrypted_message"]
+               const text = response.data["encrypted_message"];
                setEncryptedPhrase(text);
+            } else {
+               const text = response.data["decrypted_message"];
+               setDecryptedPhrase(text);
             }
          })
          .catch((error) => {
             console.log(error);
          });
-      }
+   };
 
    return (
       <>
@@ -175,7 +163,7 @@ function App() {
          {showTextModal ? (
             <TextModal
                type={textType}
-               text={textType === "encrypt" ? encryptedPhrase : decryptedPhrase }
+               text={textType === "encrypt" ? encryptPhrase : decryptPhrase}
                handleTextChange={handleTextChange}
                closeTextModal={closeTextModal}
                handleTextSubmit={handleTextSubmit}
@@ -183,9 +171,11 @@ function App() {
          ) : null}
          <textarea
             className="border-2 p-2 rounded-lg w-full"
-            value={encryptedPhrase}
+            value={textType === "encrypt" ? encryptedPhrase : decryptedPhrase}
             rows={7}
-            placeholder="Encrypted text"
+            placeholder={
+               textType === "encrypt" ? "Encrypted text" : "Decrypted text"
+            }
          />
       </>
    );
