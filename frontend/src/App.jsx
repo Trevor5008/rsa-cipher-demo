@@ -62,6 +62,16 @@ function App() {
       setShowTextModal(false);
    };
 
+   const handleTextReset = () => {
+      if (textType === "encrypt") {
+         setEncryptPhrase("");
+         setEncryptedPhrase("");
+      } else {
+         setDecryptPhrase("");
+         setDecryptedPhrase("");
+      }
+   }
+
    const handleKeysSubmit = () => {
       console.log("Submitting keys");
       closeKeysModal();
@@ -166,6 +176,7 @@ function App() {
                text={textType === "encrypt" ? encryptPhrase : decryptPhrase}
                handleTextChange={handleTextChange}
                closeTextModal={closeTextModal}
+               clearText={handleTextReset}
                handleTextSubmit={handleTextSubmit}
             />
          ) : null}
@@ -177,6 +188,9 @@ function App() {
                textType === "encrypt" ? "Encrypted text" : "Decrypted text"
             }
          />
+         <button onClick={handleTextReset} className="m-2 bg-blue-500 rounded-lg p-2">
+            Clear Text
+         </button>
       </>
    );
 }

@@ -6,6 +6,7 @@ export default function TextModal({
    text,
    handleTextChange,
    handleTextSubmit,
+   clearText,
    closeTextModal,
 }) {
    const [textValid, setTextValid] = useState(true);
@@ -53,6 +54,12 @@ export default function TextModal({
                   className="bg-blue-500 text-white p-2 rounded-lg ml-2"
                >
                   Close
+               </button>
+               <button
+                  onClick={clearText}
+                  className="bg-orange-500 text-white p-2 rounded-lg ml-2"
+               >
+                  Reset
                </button>
                <button
                   className="bg-green-500 text-white p-2 rounded-lg mr-2"

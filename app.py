@@ -51,7 +51,6 @@ def submit_keys():
    e = int(data.get('publicExp'))
    # private exponent (d) calculation
    d = find_mod_inverse(e, phi)
-   print(d)
 
    public_key = {'e': e, 'n': str(n)}
    private_key = {'d': str(d), 'n': str(n)}
@@ -60,7 +59,6 @@ def submit_keys():
       'publicKey': public_key, 
       'privateKey': private_key
    })
-
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
@@ -73,7 +71,6 @@ def encrypt_message():
       return jsonify({'error': 'Missing JSON body'}), 400
 
    message = data.get('text')
-   print(message)
 
    e = data.get('publicExp')
    n = data.get('mod')
@@ -86,7 +83,6 @@ def encrypt_message():
       return jsonify({'encrypted_message': encrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400
-
 
 @app.route('/decrypt', methods=['POST'])
 def decrypt_message():
@@ -115,7 +111,6 @@ def decrypt_message():
       return jsonify({'decrypted_message': decrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400
-
 
 if __name__ == '__main__':
    app.run(debug=True)
