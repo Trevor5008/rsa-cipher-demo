@@ -1,5 +1,17 @@
-import math
+import math, random
 from sympy import isprime
+
+def generate_large_prime():
+   while True:
+      prime_candidate = random.getrandbits(512)
+      if isprime(prime_candidate):
+         return prime_candidate
+      
+def generate_prime_vals():
+   p = generate_large_prime()
+   q = generate_large_prime()
+
+   return p, q
 
 # Validate that val is a prime number and that it is 512 bits in length
 def validate_isprime(val):

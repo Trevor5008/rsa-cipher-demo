@@ -1,16 +1,21 @@
 from flask import Flask, request, jsonify
-from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse
+from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/generate-primes', methods=['GET'])
+def generate_primes():
+   p, q = generate_prime_vals()
 
-@app.route('/', methods=['GET'])
-def hello_world():
-   return 'Hello, World!'
-
-
+   return jsonify({
+      'p': str(p), 
+      'q': str(q), 
+      'mod': str(p * q),
+      'd': str(find_mod_inverse(65537, (p - 1) * (q - 1)))
+   })
+   
 @app.route('/validate-prime', methods=['POST'])
 def validate_prime():
    data = request.json
@@ -59,21 +64,19 @@ def submit_keys():
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
+   if request.method == 'OPTIONS':
+      return jsonify({'message': 'Options request received'}), 200
+   
    data = request.json
 
    if not data:
       return jsonify({'error': 'Missing JSON body'}), 400
 
-   message = data.get('phrase')
-   public_key = data.get('publicKey')
+   message = data.get('text')
+   print(message)
 
-   if not public_key:
-      return jsonify({'error': 'Missing public key'}), 400
-
-   e = public_key.get('e')
-   n = public_key.get('n')
-
-   print(e, n)
+   e = data.get('publicExp')
+   n = data.get('mod')
 
    if not message or not e or not n:
       return jsonify({'error': 'Missing required parameters'}), 400
@@ -92,27 +95,23 @@ def decrypt_message():
    if not data:
       return jsonify({'error': 'Missing JSON body'}), 400
 
-   encrypted_message = data.get('encryptedPhrase')
-   private_key = data.get('privateKey')
+   message = data.get('text')
 
-   if not private_key:
-      return jsonify({'error': 'Missing private key'}), 400
-
-   d = private_key.get('d')
-   n = private_key.get('n')
+   d = data.get('privateExp')
+   n = data.get('mod')
 
    if not d:
       return jsonify({'error': 'Missing private exponent'}),
    if not n:
       return jsonify({'error': 'Missing modulus'}),
-   if not encrypted_message:
+   if not message:
       return jsonify({'error': 'Missing encrypted message'}),
 
-   if not encrypted_message or not d or not n:
+   if not message or not d or not n:
       return jsonify({'error': 'Missing required parameters'}), 400
    try:
       decrypted_message = rsa_decrypt(
-          int(encrypted_message), int(d), int(n))
+          int(message), int(d), int(n))
       return jsonify({'decrypted_message': decrypted_message})
    except ValueError as ve:
       return jsonify({'error': str(ve)}), 400

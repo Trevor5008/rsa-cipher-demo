@@ -7,20 +7,16 @@ function App() {
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
-   const [mod, setMod] = useState("");
-   const [privateExp, setPrivateExp] = useState("");
    const [showTextModal, setShowTextModal] = useState(false);
    const [textType, setTextType] = useState("");
 
-   // const [mod, setMod] = useState("");
-   // const [phi, setPhi] = useState("")
-   // const [privateExp, setPrivateExp] = useState("")
+   const [mod, setMod] = useState("");
+   const [privateExp, setPrivateExp] = useState("")
    // // Flags for key presence
    // const [hasPublicKey, setHasPublicKey] = useState(false);
    // const [hasPrivateKey, setHasPrivateKey] = useState(false);
    // // Flag for encryption readiness
    // const [readyToEncrypt, setReadyToEncrypt] = useState(hasPublicKey && hasPrivateKey);
-   // const [phrase, setPhrase] = useState("");
    // Encryption/Decryption phrases
    const [encryptedPhrase, setEncryptedPhrase] = useState("");
    const [decryptedPhrase, setDecryptedPhrase] = useState("");
@@ -47,7 +43,6 @@ function App() {
       textType === "encrypt"
          ? setEncryptedPhrase(e.target.value)
          : setDecryptedPhrase(e.target.value);
-      console.log(e.target.value);
    }
 
    // const validatePrimes = () => {
@@ -66,10 +61,6 @@ function App() {
    //    })
    // }
 
-   // const handleModulusChange = (e) => {
-   //    console.log(e.target.value)
-   //    setModulus(e.target.value);
-   // }
    const closeKeysModal = () => {
       setShowKeysModal(false);
    };
@@ -102,6 +93,48 @@ function App() {
          });
    };
 
+   const generatePrimes = () => {
+      console.log("Generating primes");
+      axios.get("http://127.0.0.1:5000/generate-primes")
+         .then((response) => {
+            const { p, q, mod, d } = response.data;
+            setP(p);
+            setQ(q);
+            setMod(mod);
+            setPrivateExp(d);
+         })
+         .catch((error) => {
+            console.log(error);
+         });
+         console.log(p, q, mod, privateExp)
+      }
+
+   const handleTextSubmit = () => {
+      closeTextModal();
+      const route = textType === "encrypt" ? "encrypt" : "decrypt";
+      const payload = textType === "encrypt"
+         ? { text: encryptedPhrase, publicExp, mod }
+         : { text: decryptedPhrase, privateExp, mod }
+      axios
+         .post(
+            `http://127.0.0.1:5000/${route}`,
+            payload,
+            { headers: { "Content-Type": "application/json" } }
+         )
+         .then((response) => {
+            if (textType === "encrypt") {
+               const text = response.data["decrypted_message"]
+               setDecryptedPhrase(text);
+            } else {
+               const text = response.data["encrypted_message"]
+               setEncryptedPhrase(text);
+            }
+         })
+         .catch((error) => {
+            console.log(error);
+         });
+      }
+
    return (
       <>
          {/* Heading */}
@@ -121,6 +154,7 @@ function App() {
                p={p}
                q={q}
                handleKeysSubmit={handleKeysSubmit}
+               generatePrimes={generatePrimes}
                closeKeysModal={closeKeysModal}
             />
          ) : null}
@@ -141,12 +175,18 @@ function App() {
          {showTextModal ? (
             <TextModal
                type={textType}
-               text={textType === "encrypt" ? encryptedPhrase : decryptedPhrase}
+               text={textType === "encrypt" ? encryptedPhrase : decryptedPhrase }
                handleTextChange={handleTextChange}
-               // handleTextBlur={handleTextBlur}
                closeTextModal={closeTextModal}
+               handleTextSubmit={handleTextSubmit}
             />
          ) : null}
+         <textarea
+            className="border-2 p-2 rounded-lg w-full"
+            value={encryptedPhrase}
+            rows={7}
+            placeholder="Encrypted text"
+         />
       </>
    );
 }

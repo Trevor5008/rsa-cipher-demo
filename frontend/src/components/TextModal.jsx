@@ -5,13 +5,27 @@ export default function TextModal({
    type,
    text,
    handleTextChange,
-   // handleTextBlur,
-   // handleTextSubmit,
+   handleTextSubmit,
    closeTextModal,
 }) {
    const [textValid, setTextValid] = useState(true);
 
-   console.log(type)
+   const handleTextBlur = async () => {
+      console.log("Validating text:", text);
+      if (type === "decrypt") {
+         const num = parseInt(text);
+         const isNumeric = /^\d+$/.test(text);
+         if (!isNumeric || num < 0) {
+            setTextValid(false);
+         } else {
+            setTextValid(true);
+         }
+      } else {
+         setTextValid(text.length < 200)
+      }
+   }
+
+   console.log(text)
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
          <div className="bg-white p-8 rounded-lg w-1/3 border-2">
@@ -24,11 +38,15 @@ export default function TextModal({
                }`}
                value={text || ""}
                onChange={handleTextChange}
-               // onBlur={handleTextBlur}
+               onBlur={handleTextBlur}
                rows={7}
-               placeholder="Enter a prime number for p"
+               placeholder={type === "encrypt" ? "Enter text to encrypt" : "Enter number to decrypt"}
             />
-
+            {!textValid && (
+               <p className="text-red-500 text-sm mt-2">
+                  {type === "decrypt" ? "Invalid encryption value" : "Text too long"}
+               </p>
+            )}
             <div className="flex justify-between mt-4">
                <button
                   onClick={closeTextModal}
@@ -38,8 +56,8 @@ export default function TextModal({
                </button>
                <button
                   className="bg-green-500 text-white p-2 rounded-lg mr-2"
-                  disabled={textValid}
-                  // onClick={handleTextSubmit}
+                  disabled={!textValid}
+                  onClick={handleTextSubmit}
                >
                   Submit
                </button>

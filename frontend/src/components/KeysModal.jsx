@@ -9,6 +9,7 @@ export default function KeysModal({
    handleQChange,
    p,
    q,
+   generatePrimes,
    handleKeysSubmit,
    closeKeysModal,
 }) {
@@ -48,9 +49,6 @@ export default function KeysModal({
 
    const validateCoprime = () => {
       setCoPrimeValid(pValid && qValid && p !== q);
-      // if (p === q || !pValid || !qValid) {
-      //    setCoPrimeValid(false);
-      // }
    };
 
    // Handle blur events for p and q
@@ -123,6 +121,12 @@ export default function KeysModal({
                   className="bg-blue-500 text-white p-2 rounded-lg ml-2"
                >
                   Close
+               </button>
+               <button
+                  onClick={generatePrimes}
+                  className="bg-orange-500 text-white p-2 rounded-lg ml-2"
+               >
+                  Generate
                </button>
                <button
                   className="bg-green-500 text-white p-2 rounded-lg mr-2"
