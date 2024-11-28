@@ -15,7 +15,7 @@ export default function KeysModal({
    clearPandQ,
    closeKeysModal,
 }) {
-   const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || "http://127.0.0.1/5000";
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1/5000";
    const [pValid, setPValid] = useState(true);
    const [qValid, setQValid] = useState(true);
    const [coPrimeValid, setCoPrimeValid] = useState(true);

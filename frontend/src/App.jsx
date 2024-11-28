@@ -6,7 +6,7 @@ import Key from "./components/Icons/Key";
 import axios from "axios";
 
 function App() {
-   const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL || "http://127.0.0.1:5000";
+   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
