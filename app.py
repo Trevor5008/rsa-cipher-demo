@@ -1,6 +1,7 @@
 from flask import Flask, send_from_directory, request, jsonify
 from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
 from flask_cors import CORS
+import os
 
 app = Flask(__name__, static_folder="frontend/dist")
 CORS(app)
@@ -9,13 +10,16 @@ CORS(app)
 def serve_index():
    return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/favicon.ico')
+def serve_favicon():
+   return send_from_directory(app.static_folder, 'favicon.ico')
+
 @app.route('/<path:path>')
 def serve_static(path):
-   return send_from_directory(app.static_folder, path)
-
-@app.route('/favicon.ico')
-def favicon():
-   return send_from_directory(app.static_folder, '/assets/favicon.ico')
+   if os.path.exists(os.path.join(app.static_folder, path)):
+      return send_from_directory(app.static_folder, path)
+   else:
+      return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/generate-primes', methods=['GET'])
 def generate_primes():
