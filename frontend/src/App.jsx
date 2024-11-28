@@ -4,8 +4,10 @@ import TextModal from "./components/TextModal";
 import Paperclip from "./components/Icons/Paperclip";
 import Key from "./components/Icons/Key";
 import axios from "axios";
+import process from "process";
 
 function App() {
+   const API_BASE_URL = process.env.REACT_APP_BASE_URL || "http://127.0.0.1:5000";
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
@@ -29,6 +31,7 @@ function App() {
    const [showKeysModal, setShowKeysModal] = useState(false);
    // Notifications
    const [copied, setCopied] = useState(false);
+
 
    useEffect(() => {
       setHasKeys(privateExp && mod && p && q);
@@ -96,7 +99,7 @@ function App() {
       closeKeysModal();
       axios
          .post(
-            "http://127.0.0.1:5000/submit-keys",
+            `${API_BASE_URL}/submit-keys`,
             { p: p, q: q, publicExp: publicExp },
             { headers: { "Content-Type": "application/json" } }
          )
@@ -114,7 +117,7 @@ function App() {
    const generatePrimes = () => {
       console.log("Generating primes");
       axios
-         .get("http://127.0.0.1:5000/generate-primes")
+         .get(`${API_BASE_URL}/generate-primes`)
          .then((response) => {
             const { p, q, mod, d } = response.data;
             setP(p);
@@ -136,7 +139,7 @@ function App() {
             ? { text: encryptPhrase, publicExp, mod }
             : { text: decryptPhrase, privateExp, mod };
       axios
-         .post(`http://127.0.0.1:5000/${route}`, payload, {
+         .post(`${API_BASE_URL}/${route}`, payload, {
             headers: { "Content-Type": "application/json" },
          })
          .then((response) => {
