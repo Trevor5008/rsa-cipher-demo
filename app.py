@@ -9,6 +9,10 @@ CORS(app)
 def serve_index():
    return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/favicon.ico')
+def favicon():
+   return send_from_directory(app.static_folder, '/assets/favicon.ico')
+
 @app.route('/generate-primes', methods=['GET'])
 def generate_primes():
    p, q = generate_prime_vals()
