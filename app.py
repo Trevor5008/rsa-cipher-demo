@@ -2,12 +2,16 @@ from flask import Flask, send_from_directory, request, jsonify
 from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
 from flask_cors import CORS
 
-app = Flask(__name__, static_folder="frontend/dist", static_url_path="")
+app = Flask(__name__, static_folder="frontend/dist")
 CORS(app)
 
 @app.route('/')
 def serve_index():
    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+   return send_from_directory(app.static_folder, path)
 
 @app.route('/favicon.ico')
 def favicon():
