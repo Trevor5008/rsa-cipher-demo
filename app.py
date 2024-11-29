@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, request, jsonify
 from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
-from flask_cors import CORS
+from flask_cors import CORS   
 import os
 
 app = Flask(__name__, static_folder="frontend/dist")
@@ -41,6 +41,7 @@ def validate_prime():
 
    val = data.get('val')
    is_valid = validate_isprime(int(val))
+   print(is_valid)
 
    if not is_valid:
       return jsonify({'error': 'Invalid prime number'}), 400
