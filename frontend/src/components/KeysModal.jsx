@@ -14,8 +14,8 @@ export default function KeysModal({
    handleKeysSubmit,
    clearPandQ,
    closeKeysModal,
+   apiBaseUrl,
 }) {
-   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1/5000";
    const [pValid, setPValid] = useState(true);
    const [qValid, setQValid] = useState(true);
    const [coPrimeValid, setCoPrimeValid] = useState(true);
@@ -24,7 +24,7 @@ export default function KeysModal({
    const validatePrime = async (value, type) => {
       try {
          const response = await axios.post(
-            `${API_BASE_URL}/validate_prime`,
+            `${apiBaseUrl}/validate-prime`,
             { val: value },
             { headers: { "Content-Type": "application/json" } }
          );

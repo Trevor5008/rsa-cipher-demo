@@ -7,6 +7,7 @@ import axios from "axios";
 
 function App() {
    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+   console.log(API_BASE_URL);
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
@@ -251,6 +252,7 @@ function App() {
                generatePrimes={generatePrimes}
                clearPandQ={clearPandQ}
                closeKeysModal={closeKeysModal}
+               apiBaseUrl={API_BASE_URL}
             />
          )}
          {showTextModal && (
