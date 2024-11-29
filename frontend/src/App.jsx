@@ -6,8 +6,7 @@ import Key from "./components/Icons/Key";
 import axios from "axios";
 
 function App() {
-   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
-   console.log(API_BASE_URL);
+   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
@@ -99,7 +98,7 @@ function App() {
       closeKeysModal();
       axios
          .post(
-            `${API_BASE_URL}/submit-keys`,
+            `${apiBaseUrl}/submit-keys`,
             { p: p, q: q, publicExp: publicExp },
             { headers: { "Content-Type": "application/json" } }
          )
@@ -117,7 +116,7 @@ function App() {
    const generatePrimes = () => {
       console.log("Generating primes");
       axios
-         .get(`${API_BASE_URL}/generate-primes`)
+         .get(`${apiBaseUrl}/generate-primes`)
          .then((response) => {
             const { p, q, mod, d } = response.data;
             setP(p);
@@ -139,7 +138,7 @@ function App() {
             ? { text: encryptPhrase, publicExp, mod }
             : { text: decryptPhrase, privateExp, mod };
       axios
-         .post(`${API_BASE_URL}/${route}`, payload, {
+         .post(`${apiBaseUrl}/${route}`, payload, {
             headers: { "Content-Type": "application/json" },
          })
          .then((response) => {
@@ -252,7 +251,7 @@ function App() {
                generatePrimes={generatePrimes}
                clearPandQ={clearPandQ}
                closeKeysModal={closeKeysModal}
-               apiBaseUrl={API_BASE_URL}
+               apiBaseUrl={apiBaseUrl}
             />
          )}
          {showTextModal && (
