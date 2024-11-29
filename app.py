@@ -10,10 +10,6 @@ CORS(app)
 def serve_index():
    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/favicon.ico')
-def serve_favicon():
-   return send_from_directory(app.static_folder, 'favicon.ico')
-
 @app.route('/<path:path>')
 def serve_static(path):
    if os.path.exists(os.path.join(app.static_folder, path)):
