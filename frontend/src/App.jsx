@@ -6,7 +6,8 @@ import Key from "./components/Icons/Key";
 import axios from "axios";
 
 function App() {
-   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+   const apiBaseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [q, setQ] = useState("");
@@ -30,7 +31,6 @@ function App() {
    const [showKeysModal, setShowKeysModal] = useState(false);
    // Notifications
    const [copied, setCopied] = useState(false);
-
 
    useEffect(() => {
       setHasKeys(privateExp && mod && p && q);
@@ -74,7 +74,7 @@ function App() {
    const clearPandQ = () => {
       setP("");
       setQ("");
-   }
+   };
 
    const copyToClipboard = (text) => {
       navigator.clipboard.writeText(text).then(() => {
@@ -107,7 +107,9 @@ function App() {
             setMod(publicKey.n);
             setPrivateExp(privateKey.d);
          })
-         .then(() => { setHasKeys(true); })
+         .then(() => {
+            setHasKeys(true);
+         })
          .catch((error) => {
             console.log(error);
          });
@@ -162,33 +164,47 @@ function App() {
             <h1 className="text-3xl font-bold text-center">RSA Demo</h1>
          </header>
          {/* Buttons section */}
-         <div className="flex justify-between items-center w-full max-w-3xl mb-4">
+         <div className="flex items-center flex-col border-2 border-red-500 w-5/6 mb-5">
+            {/* "Enter Key Data" btn */}
             <button
-               className="bg-orange-500 rounded-lg p-2 text-white ml-2"
+               className="bg-orange-500 border-2 border-red-500 rounded-lg p-2 w-10/12 text-white mb-3"
                onClick={openKeysModal}
             >
                Enter Key Data
             </button>
-            <h3 className="text-md space-x-2 font-bold flex items-center">Private &nbsp;{<Key hasKeys={hasKeys}/>}</h3>
-            <h3 className="text-md space-x-1 font-bold flex items-center ">Public &nbsp;{<Key hasKeys={hasKeys}/>}</h3>
-            <div className="flex space-x-4 mr-2">
-            <button
-               className={`bg-blue-500 rounded-lg p-2 text-white cursor-${hasKeys ? "pointer" : "not-allowed"}`}
-               type="encrypt"
-               onClick={() => openTextModal("encrypt")}
-               disabled={!hasKeys}
-            >
-               Enter Text to Encrypt
-            </button>
-            
-            <button
-               className={`bg-blue-500 rounded-lg p-2 text-white cursor-${hasKeys ? "pointer" : "not-allowed"}`}
-               type="decrypt"
-               onClick={() => openTextModal("decrypt")}
-               disabled={!hasKeys}
-            >
-               Enter Text to Decrypt
-            </button>
+            {/* Keys display */}
+            <div className="flex justify-evenly gap-10 w-10/12 mb-3 border-2 border-red-500">
+               <h3 className="text-md font-bold flex items-center">
+                  Private &nbsp;{<Key hasKeys={hasKeys} />}
+               </h3>
+               <h3 className="text-md font-bold flex items-center ">
+                  Public &nbsp;{<Key hasKeys={hasKeys} />}
+               </h3>
+            </div>
+            {/* Encryption/Decryption button container */}
+            <div className="flex gap-6 w-10/12 justify-between border-2 border-red-500">
+               {/* Ecryption */}
+               <button
+                  className={`bg-blue-500 rounded-lg p-2 flex-1 text-white cursor-${
+                     hasKeys ? "pointer" : "not-allowed"
+                  }`}
+                  type="encrypt"
+                  onClick={() => openTextModal("encrypt")}
+                  disabled={!hasKeys}
+               >
+                  Text to Encrypt
+               </button>
+               {/* Decryption */}
+               <button
+                  className={`bg-blue-500 rounded-lg p-2 flex-1 text-white cursor-${
+                     hasKeys ? "pointer" : "not-allowed"
+                  }`}
+                  type="decrypt"
+                  onClick={() => openTextModal("decrypt")}
+                  disabled={!hasKeys}
+               >
+                  Text to Decrypt
+               </button>
             </div>
          </div>
          {showTextModal ? (
@@ -205,7 +221,7 @@ function App() {
          ) : null}
 
          {/* Text output section */}
-         <div className="flex flex-col items-end max-w-3xl w-full">
+         <div className="flex flex-col items-end max-w-3xl w-5/6">
             <textarea
                className="border-2 p-4 rounded-lg w-full h-40 resize-none mb-4"
                value={
@@ -220,7 +236,7 @@ function App() {
             <div className="flex justify-evenly items-center space-x-4">
                <button
                   onClick={handleTextReset}
-                  className="bg-blue-500 text-white p-2 rounded-lg"
+                  className="bg-blue-500 text-white p-2 rounded-lg w-3/4"
                >
                   Clear
                </button>

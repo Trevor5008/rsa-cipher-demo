@@ -7,6 +7,9 @@ export default {
 ],
   theme: {
     extend: {},
+    screens: {
+      'sm': '420px'
+    }
   },
   plugins: [
       require('@tailwindcss/forms')
