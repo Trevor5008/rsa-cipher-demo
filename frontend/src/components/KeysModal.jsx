@@ -73,10 +73,10 @@ export default function KeysModal({
 
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-         <div className="bg-white py-8 px-8 rounded-lg w-full max-w-lg border-2">
-            <div className="flex justify-between space-x-4 items-center mb-4">
+         <div className="bg-white py-6 px-8 rounded-lg w-5/6 max-w-lg border-2">
+            <div className="flex justify-between space-x-4 items-center mb-2">
                <div className="flex items-center space-x-6">
-               <label className="block text-md font-bold">
+               <label className="block text-sm font-bold">
                   Public Exponent (e)
                </label>
                <input
@@ -89,7 +89,7 @@ export default function KeysModal({
                </div>
                <Close closeModal={closeKeysModal} />
             </div>
-            <label className="block text-lg font-bold my-2">P Value</label>
+            <label className="block text-md font-bold my-2">P Value</label>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   pValid ? "border-gray-400" : "border-red-500"
@@ -102,7 +102,7 @@ export default function KeysModal({
             />
             {!pValid && <p className="text-red-500 text-sm">Invalid P value</p>}
 
-            <label className="block text-lg font-bold mt-4 mb-2">Q Value</label>
+            <label className="block text-md font-bold mt-4 mb-2">Q Value</label>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   qValid ? "border-gray-400" : "border-red-500"

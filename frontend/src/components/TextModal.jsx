@@ -32,7 +32,7 @@ export default function TextModal({
 
    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-         <div className="bg-white p-8 rounded-lg w-1/3 border-2">
+         <div className="bg-white p-8 rounded-lg w-5/6 border-2">
             <h1 className="text-2xl font-bold mb-3">
                {type === "encrypt" ? "Encrypt" : "Decrypt"}
             </h1>
