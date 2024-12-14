@@ -164,16 +164,16 @@ function App() {
             <h1 className="text-3xl font-bold text-center">RSA Demo</h1>
          </header>
          {/* Buttons section */}
-         <div className="flex items-center flex-col border-2 border-red-500 w-5/6 mb-5">
+         <div className="flex items-center flex-col px-4 w-full mb-6">
             {/* "Enter Key Data" btn */}
             <button
-               className="bg-orange-500 border-2 border-red-500 rounded-lg p-2 w-10/12 text-white mb-3"
+               className="bg-orange-500 border-2 rounded-lg p-2 w-10/12 text-white mb-3"
                onClick={openKeysModal}
             >
                Enter Key Data
             </button>
             {/* Keys display */}
-            <div className="flex justify-evenly gap-10 w-10/12 mb-3 border-2 border-red-500">
+            <div className="flex justify-evenly gap-10 w-5/6 mb-3">
                <h3 className="text-md font-bold flex items-center">
                   Private &nbsp;{<Key hasKeys={hasKeys} />}
                </h3>
@@ -182,7 +182,7 @@ function App() {
                </h3>
             </div>
             {/* Encryption/Decryption button container */}
-            <div className="flex gap-6 w-10/12 justify-between border-2 border-red-500">
+            <div className="flex gap-6 w-10/12 justify-between">
                {/* Ecryption */}
                <button
                   className={`bg-blue-500 rounded-lg p-2 flex-1 text-white cursor-${
@@ -221,9 +221,9 @@ function App() {
          ) : null}
 
          {/* Text output section */}
-         <div className="flex flex-col items-end max-w-3xl w-5/6">
+         <div className="flex flex-col items-end max-w-3xl w-5/6 px-2">
             <textarea
-               className="border-2 p-4 rounded-lg w-full h-40 resize-none mb-4"
+               className="border-2 p-2 rounded-lg w-full h-40 resize-none mb-4"
                value={
                   textType === "encrypt" ? encryptedPhrase : decryptedPhrase
                }
