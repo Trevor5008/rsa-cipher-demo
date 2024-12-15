@@ -94,7 +94,6 @@ function App() {
    };
 
    const handleKeysSubmit = () => {
-      console.log("Submitting keys");
       closeKeysModal();
       axios
          .post(
@@ -116,7 +115,6 @@ function App() {
    };
 
    const generatePrimes = () => {
-      console.log("Generating primes");
       axios
          .get(`${apiBaseUrl}/generate-primes`)
          .then((response) => {
@@ -129,7 +127,6 @@ function App() {
          .catch((error) => {
             console.log(error);
          });
-      console.log(p, q, mod, privateExp);
    };
 
    const handleTextSubmit = () => {

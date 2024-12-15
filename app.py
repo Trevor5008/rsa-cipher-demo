@@ -19,7 +19,9 @@ def serve_static(path):
 
 @app.route('/generate-primes', methods=['GET'])
 def generate_primes():
-   p, q = generate_prime_vals()
+   p_val = 512
+   q_val = 1
+   p, q = generate_prime_vals(p_val, q_val)
 
    return jsonify({
       'p': str(p), 
@@ -75,6 +77,7 @@ def submit_keys():
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
+   print("encrypting")
    if request.method == 'OPTIONS':
       return jsonify({'message': 'Options request received'}), 200
    

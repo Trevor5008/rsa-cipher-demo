@@ -30,7 +30,6 @@ export default function KeysModal({
          );
 
          const isValid = response.data["valid"];
-         console.log(`Validating ${type}:`, isValid);
 
          if (type === "p") {
             setPValid(isValid);
