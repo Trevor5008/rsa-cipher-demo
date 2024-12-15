@@ -17,17 +17,15 @@ def serve_static(path):
    else:
       return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/generate-primes', methods=['GET'])
-def generate_primes():
-   p_val = 512
-   q_val = 1
-   p, q = generate_prime_vals(p_val, q_val)
+@app.route('/generate-primes/<public_exp>/<p_bits>/<q_bits>', methods=['GET'])
+def generate_primes(public_exp, q_bits, p_bits):
+   p, q = generate_prime_vals(int(p_bits), int(q_bits))
 
    return jsonify({
       'p': str(p), 
       'q': str(q), 
       'mod': str(p * q),
-      'd': str(find_mod_inverse(65537, (p - 1) * (q - 1)))
+      'd': str(find_mod_inverse(int(public_exp), (p - 1) * (q - 1)))
    })
    
 @app.route('/validate-prime', methods=['POST'])
@@ -77,7 +75,6 @@ def submit_keys():
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt_message():
-   print("encrypting")
    if request.method == 'OPTIONS':
       return jsonify({'message': 'Options request received'}), 200
    

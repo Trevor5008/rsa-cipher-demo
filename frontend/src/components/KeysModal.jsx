@@ -9,7 +9,11 @@ export default function KeysModal({
    handlePChange,
    handleQChange,
    p,
+   pBits,
+   handlePBitsChange,
    q,
+   qBits,
+   handleQBitsChange,
    generatePrimes,
    handleKeysSubmit,
    clearPandQ,
@@ -75,20 +79,30 @@ export default function KeysModal({
          <div className="bg-white py-6 px-8 rounded-lg w-5/6 max-w-lg border-2">
             <div className="flex justify-between space-x-4 items-center mb-2">
                <div className="flex items-center space-x-6">
-               <label className="block text-sm font-bold">
-                  Public Exponent (e)
-               </label>
-               <input
-                  type="text"
-                  placeholder="Public Exponent"
-                  value={publicExp || ""}
-                  onChange={handlePublicExpChange}
-                  className="border-2 border-gray-400 p-1 rounded-lg w-1/4 text-center mr-2"
-               />
+                  <label className="block text-sm font-bold">
+                     Public Exponent (e)
+                  </label>
+                  <input
+                     type="text"
+                     placeholder="Public Exponent"
+                     value={publicExp || ""}
+                     onChange={handlePublicExpChange}
+                     className="border-2 border-gray-400 p-1 rounded-lg w-1/4 text-center mr-2"
+                  />
                </div>
                <Close closeModal={closeKeysModal} />
             </div>
-            <label className="block text-md font-bold my-2">P Value</label>
+            <div className="flex justify-between space-x-4 items-center mb-2">
+               <label className="block text-md font-bold my-2">P Value</label>
+               <label className="block text-sm font-bold">Bit Length:</label>
+               <input
+                  type="text"
+                  placeholder="Public Exponent"
+                  value={pBits || ""}
+                  onChange={handlePBitsChange}
+                  className="border-2 border-gray-400 p-1 rounded-lg w-1/4 text-center mr-2"
+               />
+            </div>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   pValid ? "border-gray-400" : "border-red-500"
@@ -100,8 +114,17 @@ export default function KeysModal({
                placeholder="Enter a prime number for p"
             />
             {!pValid && <p className="text-red-500 text-sm">Invalid P value</p>}
-
+            <div className="flex justify-between space-x-4 items-center mb-2">
             <label className="block text-md font-bold mt-4 mb-2">Q Value</label>
+            <label className="block text-sm font-bold">Bit Length:</label>
+               <input
+                  type="text"
+                  placeholder="Public Exponent"
+                  value={qBits || ""}
+                  onChange={handleQBitsChange}
+                  className="border-2 border-gray-400 p-1 rounded-lg w-1/4 text-center mr-2"
+               />
+               </div>
             <textarea
                className={`border-2 p-2 rounded-lg w-full ${
                   qValid ? "border-gray-400" : "border-red-500"

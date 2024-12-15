@@ -6,11 +6,13 @@ import Key from "./components/Icons/Key";
 import axios from "axios";
 
 function App() {
-   const apiBaseUrl =
+   const apiBaseUrl = 
       import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
+   const [pBits, setPBits] = useState(512);
    const [q, setQ] = useState("");
+   const [qBits, setQBits] = useState(512);
    const [showTextModal, setShowTextModal] = useState(false);
    const [textType, setTextType] = useState("");
 
@@ -48,9 +50,17 @@ function App() {
       setP(e.target.value);
    };
 
+   const handlePBitsChange = (e) => {
+      setPBits(e.target.value);
+   }
+
    const handleQChange = (e) => {
       setQ(e.target.value);
    };
+
+   const handleQBitsChange = (e) => {
+      setQBits(e.target.value);
+   }
 
    const handleTextChange = (e) => {
       textType === "encrypt"
@@ -116,7 +126,7 @@ function App() {
 
    const generatePrimes = () => {
       axios
-         .get(`${apiBaseUrl}/generate-primes`)
+         .get(`${apiBaseUrl}/generate-primes/${publicExp}/${pBits}/${qBits}`)
          .then((response) => {
             const { p, q, mod, d } = response.data;
             setP(p);
@@ -259,7 +269,11 @@ function App() {
                handlePChange={handlePChange}
                handleQChange={handleQChange}
                p={p}
+               pBits={pBits}
+               handlePBitsChange={handlePBitsChange}
                q={q}
+               qBits={qBits}
+               handleQBitsChange={handleQBitsChange}
                handleKeysSubmit={handleKeysSubmit}
                generatePrimes={generatePrimes}
                clearPandQ={clearPandQ}
