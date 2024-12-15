@@ -164,16 +164,16 @@ function App() {
             <h1 className="text-3xl font-bold text-center">RSA Demo</h1>
          </header>
          {/* Buttons section */}
-         <div className="flex items-center flex-col px-4 w-full mb-6">
+         <div className="flex items-center flex-col md:flex-row px-4 w-full md:w-3/4 mb-6 md:align-center md:justify-center">
             {/* "Enter Key Data" btn */}
             <button
-               className="bg-orange-500 border-2 rounded-lg p-2 w-10/12 text-white mb-3"
+               className="bg-orange-500 rounded-lg p-2 w-10/12 text-white mb-3 md:mb-0 md:w-1/2"
                onClick={openKeysModal}
             >
                Enter Key Data
             </button>
             {/* Keys display */}
-            <div className="flex justify-evenly gap-10 w-5/6 mb-3">
+            <div className="flex justify-evenly md:justify-center md:align-middle gap-10 md:gap-4 w-5/6 mb-3 md:mb-0 md:w-5/6 md:items-center">
                <h3 className="text-md font-bold flex items-center">
                   Private &nbsp;{<Key hasKeys={hasKeys} />}
                </h3>
@@ -221,7 +221,7 @@ function App() {
          ) : null}
 
          {/* Text output section */}
-         <div className="flex flex-col items-end max-w-3xl w-5/6 px-2">
+         <div className="flex flex-col items-end max-w-3xl w-5/6 md:w-1/2 md:px-4 px-2">
             <textarea
                className="border-2 p-2 rounded-lg w-full h-40 resize-none mb-4"
                value={
@@ -233,10 +233,10 @@ function App() {
                }
                readOnly
             />
-            <div className="flex justify-evenly items-center space-x-4">
+            <div className="flex justify-evenly items-center space-x-4 w-2/4">
                <button
                   onClick={handleTextReset}
-                  className="bg-blue-500 text-white p-2 rounded-lg w-3/4"
+                  className="bg-blue-500 text-white p-2 rounded-lg w-1/2 md:w-1/2"
                >
                   Clear
                </button>
