@@ -1,27 +1,30 @@
 import { useState, useEffect } from "react";
 import KeysModal from "./components/KeysModal";
 import TextModal from "./components/TextModal";
-import Paperclip from "./components/Icons/Paperclip";
 import Key from "./components/Icons/Key";
 import axios from "axios";
+import SingleOutput from "./components/SingleOutput";
+import CombinedOutput from "./components/CombinedOutput";
 
 function App() {
-   const apiBaseUrl = 
-      import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL 
+      || "http://127.0.0.1:5000";
+   // Default public exponent = 65537
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
    const [pBits, setPBits] = useState(512);
    const [q, setQ] = useState("");
    const [qBits, setQBits] = useState(512);
+   // Modals
    const [showTextModal, setShowTextModal] = useState(false);
    const [textType, setTextType] = useState("");
 
    const [mod, setMod] = useState("");
    const [privateExp, setPrivateExp] = useState("");
    // // Flags for key presence
+   // TODO: Address edge cases
    const [hasKeys, setHasKeys] = useState(false);
-   // // Flag for encryption readiness
-   // const [readyToEncrypt, setReadyToEncrypt] = useState(hasPublicKey && hasPrivateKey);
+   // TODO: Flag for encryption readiness
    // Phrases to encrypt/decrypt
    const [encryptPhrase, setEncryptPhrase] = useState("");
    const [decryptPhrase, setDecryptPhrase] = useState("");
@@ -33,6 +36,18 @@ function App() {
    const [showKeysModal, setShowKeysModal] = useState(false);
    // Notifications
    const [copied, setCopied] = useState(false);
+   // Screen size
+   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+   useEffect(() => {
+      const handleResize = () => {
+         setIsMobile(window.innerWidth < 768);
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => window.removeEventListener("resize", handleResize);
+   }, []);
 
    useEffect(() => {
       setHasKeys(privateExp && mod && p && q);
@@ -42,25 +57,28 @@ function App() {
       setShowKeysModal(true);
    };
 
+   // Public exponent change handler
    const handlePublicExpChange = (e) => {
       setPublicExp(e.target.value);
+   };
+
+   // P bits and value change handlers
+   const handlePBitsChange = (e) => {
+      setPBits(e.target.value);
    };
 
    const handlePChange = (e) => {
       setP(e.target.value);
    };
 
-   const handlePBitsChange = (e) => {
-      setPBits(e.target.value);
-   }
+   // Q bits and value change handlers
+   const handleQBitsChange = (e) => {
+      setQBits(e.target.value);
+   };
 
    const handleQChange = (e) => {
       setQ(e.target.value);
    };
-
-   const handleQBitsChange = (e) => {
-      setQBits(e.target.value);
-   }
 
    const handleTextChange = (e) => {
       textType === "encrypt"
@@ -86,6 +104,7 @@ function App() {
       setQ("");
    };
 
+   // Paper clip icon click handler (copy to clipboard)
    const copyToClipboard = (text) => {
       navigator.clipboard.writeText(text).then(() => {
          setCopied(true);
@@ -93,6 +112,7 @@ function App() {
       });
    };
 
+   // Clears the text input fields
    const handleTextReset = () => {
       if (textType === "encrypt") {
          setEncryptPhrase("");
@@ -103,8 +123,28 @@ function App() {
       }
    };
 
+   // Generates prime numbers based on public exp, p and q bits
+   const generatePrimes = () => {
+      axios
+         // public exp, p and q bits are sent as string url params
+         .get(`${apiBaseUrl}/generate-primes/${publicExp}/${pBits}/${qBits}`)
+         .then((response) => {
+            const { p, q, mod, d } = response.data;
+            setP(p);
+            setQ(q);
+            setMod(mod);
+            setPrivateExp(d);
+         })
+         .catch((error) => {
+            console.log(error);
+         });
+   };
+
+   // Submits keys to the backend for processing
    const handleKeysSubmit = () => {
+      // Close the modal
       closeKeysModal();
+      // Sends the keys to the backend
       axios
          .post(
             `${apiBaseUrl}/submit-keys`,
@@ -124,21 +164,7 @@ function App() {
          });
    };
 
-   const generatePrimes = () => {
-      axios
-         .get(`${apiBaseUrl}/generate-primes/${publicExp}/${pBits}/${qBits}`)
-         .then((response) => {
-            const { p, q, mod, d } = response.data;
-            setP(p);
-            setQ(q);
-            setMod(mod);
-            setPrivateExp(d);
-         })
-         .catch((error) => {
-            console.log(error);
-         });
-   };
-
+   // Handles text submission for encryption/decryption
    const handleTextSubmit = () => {
       closeTextModal();
       const route = textType === "encrypt" ? "encrypt" : "decrypt";
@@ -170,14 +196,15 @@ function App() {
          <header className="mb-6">
             <h1 className="text-3xl font-bold text-center">RSA Demo</h1>
          </header>
-         {/* Buttons section */}
-         <div className="flex items-center flex-col md:flex-row px-4 w-full md:w-3/4 mb-6 md:align-center md:justify-center">
+         {/* Key Data, Public, Private Key Data */}
+         <div className="flex items-center flex-col md:flex-row px-4 w-full md:w-3/4 mb-6 md:align-center md:justify-center p-4">
             {/* "Enter Key Data" btn */}
             <button
                className="bg-orange-500 rounded-lg p-2 w-10/12 text-white mb-3 md:mb-0 md:w-1/2"
                onClick={openKeysModal}
             >
-               Enter Key Data
+               <span className="block md:hidden">Key Data</span>
+               <span className="hidden md:block">Enter Key Data</span>
             </button>
             {/* Keys display */}
             <div className="flex justify-evenly md:justify-center md:align-middle gap-10 md:gap-4 w-5/6 mb-3 md:mb-0 md:w-5/6 md:items-center">
@@ -199,7 +226,8 @@ function App() {
                   onClick={() => openTextModal("encrypt")}
                   disabled={!hasKeys}
                >
-                  Text to Encrypt
+                  <span className="block md:hidden">Encrypt</span>
+                  <span className="hidden md:block">Text to Encrypt</span>
                </button>
                {/* Decryption */}
                <button
@@ -210,58 +238,15 @@ function App() {
                   onClick={() => openTextModal("decrypt")}
                   disabled={!hasKeys}
                >
-                  Text to Decrypt
+                  <span className="block md:hidden">Decrypt</span>
+                  <span className="hidden md:block">Text to Decrypt</span>
                </button>
-            </div>
-         </div>
-         {showTextModal ? (
-            <TextModal
-               type={textType}
-               text={textType === "encrypt" ? encryptPhrase : decryptPhrase}
-               handleTextChange={handleTextChange}
-               closeTextModal={closeTextModal}
-               clearText={handleTextReset}
-               copyToClipboard={copyToClipboard}
-               handleTextSubmit={handleTextSubmit}
-               isCopied={copied}
-            />
-         ) : null}
-
-         {/* Text output section */}
-         <div className="flex flex-col items-end max-w-3xl w-5/6 md:w-1/2 md:px-4 px-2">
-            <textarea
-               className="border-2 p-2 rounded-lg w-full h-40 resize-none mb-4"
-               value={
-                  textType === "encrypt" ? encryptedPhrase : decryptedPhrase
-               }
-               rows={7}
-               placeholder={
-                  textType === "encrypt" ? "Encrypted text" : "Decrypted text"
-               }
-               readOnly
-            />
-            <div className="flex justify-evenly items-center space-x-4 w-2/4">
-               <button
-                  onClick={handleTextReset}
-                  className="bg-blue-500 text-white p-2 rounded-lg w-1/2 md:w-1/2"
-               >
-                  Clear
-               </button>
-               <Paperclip
-                  copyToClipboard={() =>
-                     copyToClipboard(
-                        textType === "encrypt"
-                           ? encryptedPhrase
-                           : decryptedPhrase
-                     )
-                  }
-               />
-               {copied && <p className="text-green-500 text-sm">Copied!</p>}
             </div>
          </div>
 
          {/* Modals section */}
-         {/* Modals */}
+
+         {/* Keys Modal */}
          {showKeysModal && (
             <KeysModal
                publicExp={publicExp}
@@ -281,7 +266,9 @@ function App() {
                apiBaseUrl={apiBaseUrl}
             />
          )}
-         {showTextModal && (
+
+         {/* Encrypt/Decrypt Text Modal */}
+         {showTextModal ? (
             <TextModal
                type={textType}
                text={textType === "encrypt" ? encryptPhrase : decryptPhrase}
@@ -291,6 +278,26 @@ function App() {
                copyToClipboard={copyToClipboard}
                handleTextSubmit={handleTextSubmit}
                isCopied={copied}
+            />
+         ) : null}
+
+         {/* Text output section */}
+         {isMobile ? (
+            <SingleOutput
+               textType={textType}
+               encryptedPhrase={encryptedPhrase}
+               decryptedPhrase={decryptedPhrase}
+               handleTextReset={handleTextReset}
+               copyToClipboard={copyToClipboard}
+               copied={copied}
+            />
+         ) : (
+            <CombinedOutput
+               encryptedPhrase={encryptedPhrase}
+               decryptedPhrase={decryptedPhrase}
+               handleTextReset={handleTextReset}
+               copyToClipboard={copyToClipboard}
+               copied={copied}
             />
          )}
       </div>

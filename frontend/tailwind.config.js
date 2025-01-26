@@ -9,11 +9,11 @@ export default {
     extend: {},
     screens: {
       'sm': '390px',
-      'md': '640px',
+      'md': '750px',
     }
   },
   plugins: [
-      require('@tailwindcss/forms')
+      // require('@tailwindcss/forms')
   ],
 }
 

@@ -19,6 +19,7 @@ def serve_static(path):
 
 @app.route('/generate-primes/<public_exp>/<p_bits>/<q_bits>', methods=['GET'])
 def generate_primes(public_exp, q_bits, p_bits):
+   print(int(p_bits), int(q_bits))
    p, q = generate_prime_vals(int(p_bits), int(q_bits))
 
    return jsonify({
