@@ -16,7 +16,6 @@ export default function TextModal({
 
    // Validate text input
    const handleTextBlur = async () => {
-      console.log("Validating text:", text);
       if (type === "decrypt") {
          const num = parseInt(text);
          const isNumeric = /^\d+$/.test(text);

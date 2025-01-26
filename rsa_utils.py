@@ -1,15 +1,15 @@
 import math, random
 from sympy import isprime
 
-def generate_large_prime():
+def generate_large_prime(val):
    while True:
-      prime_candidate = random.getrandbits(512)
+      prime_candidate = random.getrandbits(val)
       if isprime(prime_candidate):
          return prime_candidate
       
-def generate_prime_vals():
-   p = generate_large_prime()
-   q = generate_large_prime()
+def generate_prime_vals(p_val=512, q_val=512):
+   p = generate_large_prime(p_val)
+   q = generate_large_prime(q_val)
 
    return p, q
 
@@ -18,7 +18,7 @@ def validate_isprime(val):
    is_prime = isprime(val)
 
    # validate whether val is 512 bits
-   return is_prime and len(bin(val)[2:]) >= 511
+   return is_prime
 
 # private exponent (d) calculation 
 def find_mod_inverse(e, phi):
@@ -51,8 +51,6 @@ def rsa_encrypt(message, e, n):
 
    return cipher_text
 
-# public exponent (e) constant
-e = 65537
 
 # Format defaults to utf-8, also works with ascii
 def rsa_decrypt(cipher_text, d, n):
