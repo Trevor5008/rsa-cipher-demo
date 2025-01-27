@@ -1,19 +1,24 @@
-# 🔑 🔏 RSA Demo 🔏 🔑
+<div align="center">
+  <h1>🔑 🔏 RSA Demo 🔏 🔑</h1>
+</div>
 
 ## Table of Contents<br/>
 
 - [Built With](#built-with)
+- [Getting Started](#getting-started)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
-- [License](#license)<br/>
+- [License](#license)<br/><br/>
 
-### Built With<br/><br/>
+### Built With<br/>
 
-  >  ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-  >  ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
-  >  ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-  >  ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+  +  ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+  +  ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+  +  ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+  +  ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)<br/><br/>
+
+## Getting Started<br/>
 
 ### Installation<br/>
 
@@ -91,6 +96,5 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 [back to top](#readme-top)
 
 
-[back to top](#readme-top)
-
+[back to top](#readme-top) 
 [def]: # -->
