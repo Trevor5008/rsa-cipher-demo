@@ -7,8 +7,10 @@ import SingleOutput from "./components/SingleOutput";
 import CombinedOutput from "./components/CombinedOutput";
 
 function App() {
-   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL 
-      || "http://127.0.0.1:5000";
+   const apiBaseUrl = import.meta.env.PROD 
+      ? import.meta.env.PROD_API_BASE_URL
+      : import.meta.env.LOCAL_API_BASE_URL
+      
    // Default public exponent = 65537
    const [publicExp, setPublicExp] = useState(65537);
    const [p, setP] = useState("");
