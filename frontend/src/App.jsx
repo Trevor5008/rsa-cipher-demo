@@ -7,9 +7,10 @@ import SingleOutput from "./components/SingleOutput";
 import CombinedOutput from "./components/CombinedOutput";
 
 function App() {
+   // Determine which API base URL to use
    const apiBaseUrl = import.meta.env.PROD 
-      ? import.meta.env.PROD_API_BASE_URL
-      : import.meta.env.LOCAL_API_BASE_URL
+      ? import.meta.env.VITE_PROD_API_BASE_URL
+      : import.meta.env.VITE_LOCAL_API_BASE_URL
       
    // Default public exponent = 65537
    const [publicExp, setPublicExp] = useState(65537);
@@ -132,10 +133,14 @@ function App() {
          .get(`${apiBaseUrl}/generate-primes/${publicExp}/${pBits}/${qBits}`)
          .then((response) => {
             const { p, q, mod, d } = response.data;
-            setP(p);
-            setQ(q);
-            setMod(mod);
-            setPrivateExp(d);
+            if (p && q && mod && d) {
+               setP(p);
+               setQ(q);
+               setMod(mod);
+               setPrivateExp(d);
+            } else {
+               console.log("Error generating primes - missing values");
+            }
          })
          .catch((error) => {
             console.log(error);

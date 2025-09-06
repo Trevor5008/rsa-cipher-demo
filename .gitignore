@@ -15,3 +15,6 @@ __pycache__/
 
 # Ignore environment files
 .env
+
+# Ignore built frontend files
+frontend/dist/
