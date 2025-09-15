@@ -4,8 +4,7 @@ import { useModals } from "./hooks/useModals";
 import { useUI } from "./hooks/useUI";
 import createRSAService from "./services/rsaAPI";
 import KeysModal from "./components/KeysModal";
-import TextModal from "./components/TextModal";
-import TextOutput from "./components/TextOutput";
+import TextBox from "./components/TextBox";
 import Key from "./components/Icons/Key";
 
 function App() {
@@ -60,19 +59,27 @@ function App() {
         }
     };
 
-    // Handle text submission (encrypt/decrypt)
-    const handleTextSubmit = async () => {
-        try {
-            modals.closeTextModal();
 
-            if (modals.textModalType === "encrypt") {
+    // Handle text input changes
+    const handleTextChange = (type, e) => {
+        if (type === "encrypt") {
+            textProcessing.setEncryptInput(e.target.value);
+        } else if (type === "decrypt") {
+            textProcessing.setDecryptInput(e.target.value);
+        }
+    };
+
+    // Handle text submission (encrypt/decrypt)
+    const handleTextSubmit = async (type) => {
+        try {
+            if (type === "encrypt") {
                 const { encrypted_message } = await rsaAPI.encryptMessage(
                     textProcessing.encryptInput,
                     rsaKeys.publicExp,
                     rsaKeys.mod
                 );
                 textProcessing.setEncryptedResult(encrypted_message);
-            } else {
+            } else if (type === "decrypt") {
                 const { decrypted_message } = await rsaAPI.decryptMessage(
                     textProcessing.decryptInput,
                     rsaKeys.privateExp,
@@ -82,15 +89,6 @@ function App() {
             }
         } catch (error) {
             console.error("Error processing text:", error);
-        }
-    };
-
-    // Handle text input changes
-    const handleTextChange = (e) => {
-        if (modals.textModalType === "encrypt") {
-            textProcessing.setEncryptInput(e.target.value);
-        } else {
-            textProcessing.setDecryptInput(e.target.value);
         }
     };
 
@@ -113,7 +111,7 @@ function App() {
                 >
                     <span className="block md:hidden">Key Data</span>
                     <span className="hidden md:block">Enter Key Data</span>
-                </button>
+               </button>
 
                 {/* Key Status Display */}
                 <div className="flex justify-evenly md:justify-center md:align-middle gap-10 md:gap-4 w-5/6 mb-3 md:mb-0 md:w-5/6 md:items-center">
@@ -124,33 +122,8 @@ function App() {
                         Public &nbsp;{<Key hasKeys={rsaKeys.hasKeys} />}
                     </h3>
                 </div>
-
-                {/* Encryption/Decryption Buttons */}
-                <div className="flex gap-6 w-10/12 justify-between">
-                    <button
-                        className={`bg-blue-500 rounded-lg p-2 flex-1 text-white cursor-${
-rsaKeys.hasKeys ? "pointer" : "not-allowed"
-}`}
-                        onClick={() => modals.openTextModal("encrypt")}
-                        disabled={!rsaKeys.hasKeys}
-                    >
-                        <span className="block md:hidden">Encrypt</span>
-                        <span className="hidden md:block">Text to Encrypt</span>
-                    </button>
-                    <button
-                        className={`bg-blue-500 rounded-lg p-2 flex-1 text-white cursor-${
-rsaKeys.hasKeys ? "pointer" : "not-allowed"
-}`}
-                        onClick={() => modals.openTextModal("decrypt")}
-                        disabled={!rsaKeys.hasKeys}
-                    >
-                        <span className="block md:hidden">Decrypt</span>
-                        <span className="hidden md:block">Text to Decrypt</span>
-                    </button>
-                </div>
             </div>
-
-            {/* Modals */}
+            {/* Key Entry Modal */}
             {modals.showKeysModal && (
                 <KeysModal
                     publicExp={rsaKeys.publicExp}
@@ -171,54 +144,80 @@ rsaKeys.hasKeys ? "pointer" : "not-allowed"
                 />
             )}
 
-            {modals.showTextModal && (
-                <TextModal
-                    type={modals.textModalType}
-                    text={modals.textModalType === "encrypt" ? textProcessing.encryptInput : textProcessing.decryptInput}
-                    handleTextChange={handleTextChange}
-                    closeTextModal={modals.closeTextModal}
-                    clearText={() => textProcessing.clearText(modals.textModalType)}
-                    copyToClipboard={ui.copyToClipboard}
-                    handleTextSubmit={handleTextSubmit}
-                    isCopied={ui.copied}
-                />
-            )}
-
-            {/* Text Output Section */}
+            {/* Text Processing Section */}
             {ui.isMobile ? (
-                <TextOutput
-                    type={modals.textModalType}
-                    value={modals.textModalType === "encrypt" ? textProcessing.encryptedOutput : textProcessing.decryptedOutput}
-                    placeholder={modals.textModalType === "encrypt" ? "Encrypted text" : "Decrypted text"}
-                    onClear={textProcessing.clearText}
-                    onCopy={ui.copyToClipboard}
-                    copied={ui.copied}
-                    className="max-w-3xl w-5/6 md:w-1/2 md:px-4 px-2 md:hidden"
-                />
-            ) : (
-                    <div className="flex gap-4 items-end w-3/4 px-2">
-                        <TextOutput
+                <div className="max-w-3xl w-5/6 md:w-1/2 md:px-4 px-2 md:hidden">
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold mb-2">Encrypt Text</h3>
+                        <TextBox
                             type="encrypt"
-                            value={textProcessing.encryptedOutput}
-                            placeholder="Encrypted text"
+                            handleTextChange={handleTextChange}
+                            handleTextSubmit={handleTextSubmit}
+                            inputValue={textProcessing.encryptInput}
+                            outputValue={textProcessing.encryptedOutput}
+                            placeholder="Enter text to encrypt"
+                            outputPlaceholder="Encrypted result"
                             onClear={textProcessing.clearText}
                             onCopy={ui.copyToClipboard}
                             copied={ui.copied}
-                            className="w-1/2"
-                        />
-                        <TextOutput
-                            type="decrypt"
-                            value={textProcessing.decryptedOutput}
-                            placeholder="Decrypted text"
-                            onClear={textProcessing.clearText}
-                            onCopy={ui.copyToClipboard}
-                            copied={ui.copied}
-                            className="w-1/2"
+                            hasKeys={rsaKeys.hasKeys}
                         />
                     </div>
-                )}
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold mb-2">Decrypt Text</h3>
+                        <TextBox
+                            type="decrypt"
+                            handleTextChange={handleTextChange}
+                            handleTextSubmit={handleTextSubmit}
+                            inputValue={textProcessing.decryptInput}
+                            outputValue={textProcessing.decryptedOutput}
+                            placeholder="Enter encrypted number to decrypt"
+                            outputPlaceholder="Decrypted result"
+                            onClear={textProcessing.clearText}
+                            onCopy={ui.copyToClipboard}
+                            copied={ui.copied}
+                            hasKeys={rsaKeys.hasKeys}
+                        />
+                    </div>
+                </div>
+            ) : (
+                <div className="flex gap-4 items-start w-3/4 px-2">
+                    <div className="w-1/2">
+                        <h3 className="text-lg font-semibold mb-2">Encrypt Text</h3>
+                        <TextBox
+                            type="encrypt"
+                            handleTextChange={handleTextChange}
+                            handleTextSubmit={handleTextSubmit}
+                            inputValue={textProcessing.encryptInput}
+                            outputValue={textProcessing.encryptedOutput}
+                            placeholder="Enter text to encrypt"
+                            outputPlaceholder="Encrypted result"
+                            onClear={textProcessing.clearText}
+                            onCopy={() => ui.copyToClipboard(textProcessing.encryptedOutput, "encrypt")}
+                            copied={ui.encryptCopied}
+                            hasKeys={rsaKeys.hasKeys}
+                        />
+                    </div>
+                    <div className="w-1/2">
+                        <h3 className="text-lg font-semibold mb-2">Decrypt Text</h3>
+                        <TextBox
+                            type="decrypt"
+                            handleTextChange={handleTextChange}
+                            handleTextSubmit={handleTextSubmit}
+                            inputValue={textProcessing.decryptInput}
+                            outputValue={textProcessing.decryptedOutput}
+                            placeholder="Enter encrypted number to decrypt"
+                            outputPlaceholder="Decrypted result"
+                            onClear={textProcessing.clearText}
+                            onCopy={() => ui.copyToClipboard(textProcessing.decryptedOutput, "decrypt")}
+                            copied={ui.decryptCopied}
+                            hasKeys={rsaKeys.hasKeys}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
-    );
+    )
 }
 
 export default App;
