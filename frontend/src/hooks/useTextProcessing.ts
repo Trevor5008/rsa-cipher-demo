@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { TextType } from '../types/rsa';
 
 /**
  * Custom hook for managing text encryption/decryption state
@@ -14,7 +15,7 @@ export const useTextProcessing = () => {
   const [decryptedOutput, setDecryptedOutput] = useState("");
 
   // Clear specific text type
-  const clearText = (type) => {
+  const clearText = (type: TextType | "") => {
     if (type === 'encrypt') {
       setEncryptInput("");
       setEncryptedOutput("");
@@ -33,12 +34,12 @@ export const useTextProcessing = () => {
   };
 
   // Set encrypted output
-  const setEncryptedResult = (text) => {
+  const setEncryptedResult = (text: string) => {
     setEncryptedOutput(text);
   };
 
   // Set decrypted output
-  const setDecryptedResult = (text) => {
+  const setDecryptedResult = (text: string) => {
     setDecryptedOutput(text);
   };
 

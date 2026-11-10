@@ -1,20 +1,33 @@
 import axios from 'axios';
+import type {
+  DecryptResponse,
+  EncryptResponse,
+  GeneratePrimesResponse,
+  SubmitKeysResponse,
+  ValidatePrimeResponse,
+} from '../types/rsa';
 
 /**
  * API service for RSA operations
  * Centralizes all backend communication
  */
 class RSAService {
-  constructor(baseURL) {
+  private baseURL: string;
+
+  constructor(baseURL: string) {
     this.baseURL = baseURL;
   }
 
   /**
    * Generate prime numbers for RSA key generation
    */
-  async generatePrimes(publicExp, pBits, qBits) {
+  async generatePrimes(
+    publicExp: string,
+    pBits: string,
+    qBits: string
+  ): Promise<GeneratePrimesResponse> {
     try {
-      const response = await axios.get(
+      const response = await axios.get<GeneratePrimesResponse>(
         `${this.baseURL}/generate-primes/${publicExp}/${pBits}/${qBits}`
       );
       return response.data;
@@ -27,9 +40,9 @@ class RSAService {
   /**
    * Submit keys for processing and get calculated values
    */
-  async submitKeys(p, q, publicExp) {
+  async submitKeys(p: string, q: string, publicExp: string): Promise<SubmitKeysResponse> {
     try {
-      const response = await axios.post(
+      const response = await axios.post<SubmitKeysResponse>(
         `${this.baseURL}/submit-keys`,
         { p, q, publicExp },
         { headers: { "Content-Type": "application/json" } }
@@ -44,9 +57,9 @@ class RSAService {
   /**
    * Encrypt a message
    */
-  async encryptMessage(text, publicExp, mod) {
+  async encryptMessage(text: string, publicExp: string, mod: string): Promise<EncryptResponse> {
     try {
-      const response = await axios.post(
+      const response = await axios.post<EncryptResponse>(
         `${this.baseURL}/encrypt`,
         { text, publicExp, mod },
         { headers: { "Content-Type": "application/json" } }
@@ -61,9 +74,9 @@ class RSAService {
   /**
    * Decrypt a message
    */
-  async decryptMessage(text, privateExp, mod) {
+  async decryptMessage(text: string, privateExp: string, mod: string): Promise<DecryptResponse> {
     try {
-      const response = await axios.post(
+      const response = await axios.post<DecryptResponse>(
         `${this.baseURL}/decrypt`,
         { text, privateExp, mod },
         { headers: { "Content-Type": "application/json" } }
@@ -78,9 +91,9 @@ class RSAService {
   /**
    * Validate if a number is prime
    */
-  async validatePrime(value) {
+  async validatePrime(value: string): Promise<ValidatePrimeResponse> {
     try {
-      const response = await axios.post(
+      const response = await axios.post<ValidatePrimeResponse>(
         `${this.baseURL}/validate-prime`,
         { val: value },
         { headers: { "Content-Type": "application/json" } }
@@ -94,6 +107,7 @@ class RSAService {
 }
 
 // Create and export a singleton instance
-const createRSAService = (baseURL) => new RSAService(baseURL);
+const createRSAService = (baseURL: string) => new RSAService(baseURL);
 
+export type { RSAService };
 export default createRSAService;

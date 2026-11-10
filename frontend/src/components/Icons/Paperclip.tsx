@@ -1,5 +1,8 @@
-/* eslint-disable */
-export default function Paperclip({ copyToClipboard }) {
+export interface PaperclipProps {
+   copyToClipboard: () => void;
+}
+
+export default function Paperclip({ copyToClipboard }: PaperclipProps) {
    return (
       <svg
          xmlns="http://www.w3.org/2000/svg"

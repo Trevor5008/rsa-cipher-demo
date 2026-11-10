@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Paperclip from "./Icons/Paperclip";
+import type { TextType } from "../types/rsa";
 
-/* eslint-disable react/prop-types */
+export interface TextModalProps {
+   type: TextType | "";
+   text: string;
+   handleTextChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+   handleTextSubmit: () => void;
+   clearText: () => void;
+   closeTextModal: () => void;
+   copyToClipboard: (text: string) => void;
+   isCopied: boolean;
+}
+
 export default function TextModal({
    type,
    text,
@@ -11,7 +22,7 @@ export default function TextModal({
    closeTextModal,
    copyToClipboard,
    isCopied,
-}) {
+}: TextModalProps) {
    const [textValid, setTextValid] = useState(true);
 
    // Validate text input

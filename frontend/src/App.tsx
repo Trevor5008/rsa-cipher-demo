@@ -1,3 +1,4 @@
+import type { ChangeEvent } from "react";
 import { useRSAKeys } from "./hooks/useRSAKeys";
 import { useTextProcessing } from "./hooks/useTextProcessing";
 import { useModals } from "./hooks/useModals";
@@ -86,7 +87,7 @@ function App() {
     };
 
     // Handle text input changes
-    const handleTextChange = (e) => {
+    const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         if (modals.textModalType === "encrypt") {
             textProcessing.setEncryptInput(e.target.value);
         } else {

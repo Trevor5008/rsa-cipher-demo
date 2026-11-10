@@ -1,8 +1,29 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import Close from "./Icons/Close";
+import type { ValidatePrimeResponse } from "../types/rsa";
 
-/* eslint-disable react/prop-types */
+type InputHandler = (e: ChangeEvent<HTMLInputElement>) => void;
+type TextAreaHandler = (e: ChangeEvent<HTMLTextAreaElement>) => void;
+
+export interface KeysModalProps {
+   publicExp: string;
+   handlePublicExpChange: InputHandler;
+   handlePChange: TextAreaHandler;
+   handleQChange: TextAreaHandler;
+   p: string;
+   pBits: string;
+   handlePBitsChange: InputHandler;
+   q: string;
+   qBits: string;
+   handleQBitsChange: InputHandler;
+   generatePrimes: () => void;
+   handleKeysSubmit: () => void;
+   clearPandQ: () => void;
+   closeKeysModal: () => void;
+   apiBaseUrl: string;
+}
+
 export default function KeysModal({
    publicExp,
    handlePublicExpChange,
@@ -19,15 +40,15 @@ export default function KeysModal({
    clearPandQ,
    closeKeysModal,
    apiBaseUrl,
-}) {
+}: KeysModalProps) {
    const [pValid, setPValid] = useState(true);
    const [qValid, setQValid] = useState(true);
    const [coPrimeValid, setCoPrimeValid] = useState(true);
 
    // Validate individual prime values
-   const validatePrime = async (value, type) => {
+   const validatePrime = async (value: string, type: "p" | "q") => {
       try {
-         const response = await axios.post(
+         const response = await axios.post<ValidatePrimeResponse>(
             `${apiBaseUrl}/validate-prime`,
             { val: value },
             { headers: { "Content-Type": "application/json" } }

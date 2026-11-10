@@ -1,6 +1,8 @@
+export interface CloseProps {
+   closeModal: () => void;
+}
 
-/* eslint-disable */
-export default function Close({ closeModal }) {
+export default function Close({ closeModal }: CloseProps) {
    return (
       <svg
          xmlns="http://www.w3.org/2000/svg"

@@ -6,11 +6,11 @@ import { useState, useEffect } from 'react';
  */
 export const useRSAKeys = () => {
   // Key generation parameters
-  const [publicExp, setPublicExp] = useState(65537);
+  const [publicExp, setPublicExp] = useState("65537");
   const [p, setP] = useState("");
-  const [pBits, setPBits] = useState(512);
+  const [pBits, setPBits] = useState("512");
   const [q, setQ] = useState("");
-  const [qBits, setQBits] = useState(512);
+  const [qBits, setQBits] = useState("512");
   
   // Generated keys
   const [mod, setMod] = useState("");
@@ -25,7 +25,7 @@ export const useRSAKeys = () => {
   }, [privateExp, mod, p, q]);
 
   // Key generation
-  const generateKeys = (pValue, qValue, publicExpValue) => {
+  const generateKeys = (pValue: string, qValue: string, publicExpValue: string) => {
     setP(pValue);
     setQ(qValue);
     setPublicExp(publicExpValue);
@@ -37,7 +37,7 @@ export const useRSAKeys = () => {
     setQ("");
     setMod("");
     setPrivateExp("");
-    setPublicExp(65537);
+    setPublicExp("65537");
   };
 
   // Clear only P and Q (for regeneration)

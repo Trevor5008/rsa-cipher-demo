@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { TextType } from '../types/rsa';
 
 /**
  * Custom hook for managing modal states
@@ -7,7 +8,7 @@ import { useState } from 'react';
 export const useModals = () => {
   const [showKeysModal, setShowKeysModal] = useState(false);
   const [showTextModal, setShowTextModal] = useState(false);
-  const [textModalType, setTextModalType] = useState(""); // 'encrypt' or 'decrypt'
+  const [textModalType, setTextModalType] = useState<TextType | "">("");
 
   const openKeysModal = () => {
     setShowKeysModal(true);
@@ -17,7 +18,7 @@ export const useModals = () => {
     setShowKeysModal(false);
   };
 
-  const openTextModal = (type) => {
+  const openTextModal = (type: TextType) => {
     setTextModalType(type);
     setShowTextModal(true);
   };

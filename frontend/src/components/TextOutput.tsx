@@ -1,18 +1,28 @@
 import Paperclip from "./Icons/Paperclip";
+import type { TextType } from "../types/rsa";
+
+export interface TextOutputProps {
+  type: TextType | "";
+  value: string;
+  placeholder: string;
+  onClear: (type: TextType | "") => void;
+  onCopy: (text: string) => void;
+  copied: boolean;
+  className?: string;
+}
 
 /**
  * Unified text output component that handles both encrypted and decrypted text
- * Replaces the separate CombinedOutput and SingleOutput components
  */
 export default function TextOutput({
-  type, // 'encrypt' or 'decrypt'
+  type,
   value,
   placeholder,
   onClear,
   onCopy,
   copied,
   className = "",
-}) {
+}: TextOutputProps) {
   return (
     <div className={`flex flex-col items-end ${className}`}>
       <textarea

@@ -1,6 +1,8 @@
+export interface KeyProps {
+   hasKeys: boolean;
+}
 
-/* eslint-disable */
-export default function Key({ hasKeys}) {
+export default function Key({ hasKeys }: KeyProps) {
    return (
       <svg
          xmlns="http://www.w3.org/2000/svg"
