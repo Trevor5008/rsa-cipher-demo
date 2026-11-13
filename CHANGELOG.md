@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Layered readability in the foundations guide: reading paths for different comfort levels, a symbol glossary, and a "math you need" primer on primes, modular arithmetic, GCD, and modular inverses.
 - Equation cards (plain words, formula, read-aloud line, example numbers, collapsible "Go deeper") with stable `eq-*` anchors for future in-app information links.
 - Worked-example derivations (extended Euclidean algorithm and square-and-multiply), a "Why decryption works" explanation, a key-generation diagram, and self-check answers for the review questions.
+- Teaching-mode RSA API (`POST /teaching/keys`, `/teaching/encrypt`, `/teaching/decrypt`) that encrypts one Unicode character at a time and returns every intermediate value, a per-character trace, and structured, learner-friendly validation errors. RSA values are serialized as decimal strings. Documented in `docs/TEACHING-API.md`.
+- Backend `pytest` suite (`requirements-dev.txt`, `pytest.ini`, `tests/`) covering the teaching API and guarding the legacy endpoints.
 
 ### Changed
 - Expanded the root README with the importance of asymmetric encryption, a map from application actions to RSA concepts, and an explicit educational security boundary.

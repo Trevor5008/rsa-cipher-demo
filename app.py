@@ -1,10 +1,12 @@
 from flask import Flask, send_from_directory, request, jsonify
 from rsa_utils import rsa_encrypt, rsa_decrypt, validate_isprime, find_mod_inverse, generate_prime_vals
 from flask_cors import CORS
+from teaching_api import teaching_bp
 import os
 
 app = Flask(__name__, static_folder="frontend/dist")
 CORS(app)
+app.register_blueprint(teaching_bp)
 
 
 @app.route('/')
