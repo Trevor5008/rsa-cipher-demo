@@ -26,6 +26,9 @@
 ## Table of Contents
 
 - [About](#about)
+- [Why Asymmetric Encryption Matters](#why-asymmetric-encryption-matters)
+- [How the Learning Lab Maps to RSA](#how-the-learning-lab-maps-to-rsa)
+- [Educational Security Boundary](#educational-security-boundary)
 - [Built With](#built-with)
 - [Current Status & Roadmap](#current-status--roadmap)
 - [Educational Features](#educational-features)
@@ -36,6 +39,47 @@
 - [Contributing](#contributing)
 - [Changelog](#changelog)
 - [License](#license)
+
+For the complete learner-oriented explanation, including the mathematics, a worked example, real-world usage, production safeguards, and post-quantum context, read [RSA Foundations for Learners](docs/RSA-FOUNDATIONS.md). Its formulas are written in LaTeX and render as math on GitHub. New to the math? Start with its [reading paths](docs/RSA-FOUNDATIONS.md#how-to-read-this-guide) and [symbol glossary](docs/RSA-FOUNDATIONS.md#symbol-glossary).
+
+## Why Asymmetric Encryption Matters
+
+Symmetric encryption is efficient, but both participants need the same secret key. That creates the **key-distribution problem**: how do two people establish a shared secret while communicating over a network that an attacker may be observing?
+
+Asymmetric cryptography gives each participant a related key pair:
+
+- A **public key** that may be distributed openly.
+- A **private key** that must remain secret.
+
+RSA can illustrate two distinct uses of that key pair:
+
+1. **Confidentiality:** encrypt with the recipient's public key and decrypt with the recipient's private key.
+2. **Authenticity and integrity:** sign with the sender's private key and verify with the sender's public key.
+
+Public-key operations are slower and more limited than symmetric encryption, so real systems are normally **hybrid**: asymmetric cryptography establishes trust or protects a small session secret, while a symmetric cipher protects the actual data.
+
+## How the Learning Lab Maps to RSA
+
+The lab exposes the values used in textbook RSA so learners can connect the interface to the mathematics:
+
+| Learning Lab action | RSA concept |
+| --- | --- |
+| Choose or generate $p$ and $q$ | Select two distinct [prime numbers](docs/RSA-FOUNDATIONS.md#math-primes) |
+| Enter the public exponent | Choose $e$ with $\gcd(e, \varphi(n)) = 1$ ([Step 3](docs/RSA-FOUNDATIONS.md#eq-public-exponent)) |
+| Submit key data | Calculate $n = pq$ ([Step 1](docs/RSA-FOUNDATIONS.md#eq-modulus)), $\varphi(n) = (p - 1)(q - 1)$ ([Step 2](docs/RSA-FOUNDATIONS.md#eq-totient)), and the private exponent $d \equiv e^{-1} \pmod{\varphi(n)}$ ([Step 4](docs/RSA-FOUNDATIONS.md#eq-private-exponent)) |
+| Encrypt text | Encode text as an integer $m$, then calculate $c = m^e \bmod n$ ([encrypt](docs/RSA-FOUNDATIONS.md#eq-encrypt)) |
+| Decrypt ciphertext | Calculate $m = c^d \bmod n$ ([decrypt](docs/RSA-FOUNDATIONS.md#eq-decrypt)), then decode the integer |
+| Change prime bit lengths | Observe how modulus size affects [message capacity](docs/RSA-FOUNDATIONS.md#eq-message-range) and computation |
+
+The encoded message must satisfy $0 \le m < n$: it must be smaller than the modulus. This is why a message can be too large for the selected key even when it appears short to a person.
+
+## Educational Security Boundary
+
+> **Do not use this application to protect real secrets.**
+
+RSA Learning Lab intentionally demonstrates **textbook RSA**. The current implementation performs raw modular exponentiation, converts ASCII text directly to an integer, generates example primes with Python's general-purpose `random` module, and defaults to an approximately 1024-bit modulus. It does not implement production encryption padding such as RSAES-OAEP, signature encoding such as RSASSA-PSS, cryptographically secure key generation, hardened private-key handling, or side-channel protections.
+
+These limitations make the arithmetic easier to inspect, but textbook RSA is insecure in practice. Production software should use reviewed cryptographic libraries and complete, authenticated protocols.
 
 ## Built With
 
@@ -78,6 +122,7 @@
 - **Real-time Validation** - Immediate feedback on prime number validity and key compatibility
 - **Step-by-step Encryption/Decryption** - Watch the RSA process unfold with detailed explanations
 - **Visual Key Display** - Large numbers formatted for easy reading and understanding
+- **RSA Foundations Guide** - Connect the demo to asymmetric encryption, hybrid systems, the RSA equations, and production limitations
 
 ### Planned Learning Enhancements
 - **Interactive Tutorial** - Guided walkthrough for first-time users
@@ -91,9 +136,10 @@
 
 ### For Students
 1. **Visit the live demo** (coming soon) or follow the setup instructions below
-2. **Start with the tutorial** to understand RSA concepts
-3. **Generate your first key pair** and experiment with encryption
-4. **Try different parameters** to see how they affect security and performance
+2. **Read [RSA Foundations for Learners](docs/RSA-FOUNDATIONS.md)** to understand the purpose and vocabulary
+3. **Generate your first key pair** and identify `p`, `q`, `n`, `e`, and `d`
+4. **Encrypt and decrypt a short message** while matching each action to the equations
+5. **Try different parameters** to observe message-size and computation limits, not to create production keys
 
 ### For Educators
 1. **Set up the application** using the development setup below
@@ -171,16 +217,20 @@ Run these from the `frontend/` directory:
 
 After using this tool, students will understand:
 - **What RSA encryption is** and why it's important
+- **Why public-key cryptography helps with key distribution**
+- **How confidentiality differs from digital signatures**
+- **Why real systems combine asymmetric and symmetric cryptography**
 - **How prime numbers** are used in cryptography
 - **The mathematical process** of key generation, encryption, and decryption
 - **The relationship between key size** and security
 - **Real-world applications** of RSA encryption
+- **Why textbook RSA and this application are not production-safe**
 
 ## Technical Architecture
 
 ### Backend (Flask)
 - **RSA Algorithm Implementation** - Pure Python implementation using SymPy
-- **Prime Number Generation** - Cryptographically secure prime generation
+- **Example Prime Number Generation** - Educational prime generation using Python's general-purpose randomness; not suitable for real keys
 - **Key Validation** - Mathematical validation of key pairs
 - **RESTful API** - Clean endpoints for frontend communication
 

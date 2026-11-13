@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `docs/RSA-FOUNDATIONS.md`, a learner-oriented guide to the key-distribution problem, hybrid encryption, RSA key generation, encryption/decryption equations, a worked example, real-world roles, and post-quantum transition context.
+- LaTeX math in `docs/RSA-FOUNDATIONS.md` and the README, rendered natively on GitHub.
+- Layered readability in the foundations guide: reading paths for different comfort levels, a symbol glossary, and a "math you need" primer on primes, modular arithmetic, GCD, and modular inverses.
+- Equation cards (plain words, formula, read-aloud line, example numbers, collapsible "Go deeper") with stable `eq-*` anchors for future in-app information links.
+- Worked-example derivations (extended Euclidean algorithm and square-and-multiply), a "Why decryption works" explanation, a key-generation diagram, and self-check answers for the review questions.
+
+### Changed
+- Expanded the root README with the importance of asymmetric encryption, a map from application actions to RSA concepts, and an explicit educational security boundary.
+- Corrected the backend architecture description so the demo's general-purpose random prime generation is not described as cryptographically secure.
+
 ## [2.1.0] - 2026-11-10
 
 ### Added
