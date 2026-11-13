@@ -15,10 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Worked-example derivations (extended Euclidean algorithm and square-and-multiply), a "Why decryption works" explanation, a key-generation diagram, and self-check answers for the review questions.
 - Teaching-mode RSA API (`POST /teaching/keys`, `/teaching/encrypt`, `/teaching/decrypt`) that encrypts one Unicode character at a time and returns every intermediate value, a per-character trace, and structured, learner-friendly validation errors. RSA values are serialized as decimal strings. Documented in `docs/TEACHING-API.md`.
 - Backend `pytest` suite (`requirements-dev.txt`, `pytest.ini`, `tests/`) covering the teaching API and guarding the legacy endpoints.
+- Guided workspace that replaces the modal UI: a sticky header with an accessible Encrypt/Decrypt switch, three numbered cards (key pair, input, output), and a "How it works" region with concept steps, a worked example, a trace table, and a teaching-mode notice.
+- Key-pair panel with `Textbook (61, 53)` (e = 17) and `Bigger primes (1009, 1013)` presets, editable custom values, live `n`/`φ(n)`/`d`, public and private key cards, and an "In use" indicator that follows the mode.
+- Loading, inline-validation, and API-failure (with retry) states that never clear the learner's inputs.
+- Frontend tests with Vitest, React Testing Library, and jsdom (`npm test`).
 
 ### Changed
 - Expanded the root README with the importance of asymmetric encryption, a map from application actions to RSA concepts, and an explicit educational security boundary.
 - Corrected the backend architecture description so the demo's general-purpose random prime generation is not described as cryptographically secure.
+- The frontend derives keys through `POST /teaching/keys` (debounced, with stale responses discarded) instead of `/submit-keys`. The message output and trace show sample data until live teaching-mode encryption and decryption are connected.
+- The Encrypt and Decrypt inputs are kept separately and survive mode switches, along with the key pair.
+- Node.js 22.22+ or 24.15+ is now required for frontend development (Vitest and jsdom).
+- Production builds call the API on the same origin (Flask serves the built app); only `VITE_LOCAL_API_BASE_URL` is needed, for the dev server.
+
+### Removed
+- The modal-first frontend: `KeysModal`, `TextModal`, `TextOutput`, the custom SVG icons, the `useModals`/`useRSAKeys`/`useTextProcessing`/`useUI` hooks, the legacy `rsaAPI` client and its types, and the prime-generation controls. The legacy backend endpoints remain available.
+- The `VITE_PROD_API_BASE_URL` environment variable and the hard-coded Heroku URL in the setup docs.
 
 ## [2.1.0] - 2026-11-10
 
