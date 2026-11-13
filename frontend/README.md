@@ -4,6 +4,10 @@ The React + TypeScript single-page app for RSA Learning Lab. It talks to the Fla
 
 See the [root README](../README.md) for the full project overview and backend setup.
 
+Learners should begin with [RSA Foundations for Learners](../docs/RSA-FOUNDATIONS.md), which explains why asymmetric encryption matters, how the interface maps to the RSA equations, and where the demonstration differs from production cryptography.
+
+> **Educational-use warning:** this frontend drives a textbook-RSA demonstration. It does not provide OAEP/PSS padding, production key generation, secure private-key storage, or an authenticated protocol. Do not use it to protect real data.
+
 ## Stack
 
 - [React 18](https://react.dev/) with [TypeScript](https://www.typescriptlang.org/) in strict mode
