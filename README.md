@@ -170,6 +170,10 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
    # Install dependencies
    pip install -r requirements.txt
+
+   # Optional: install test dependencies and run the backend tests
+   pip install -r requirements-dev.txt
+   pytest
    ```
 
 3. **Frontend Setup (React + TypeScript + Vite)**
@@ -233,6 +237,8 @@ After using this tool, students will understand:
 - **Example Prime Number Generation** - Educational prime generation using Python's general-purpose randomness; not suitable for real keys
 - **Key Validation** - Mathematical validation of key pairs
 - **RESTful API** - Clean endpoints for frontend communication
+- **Teaching-Mode API** - `/teaching/keys`, `/teaching/encrypt`, and `/teaching/decrypt` return every intermediate value and a per-character trace for the learning UI; see [Teaching-Mode RSA API](docs/TEACHING-API.md)
+- **Backend Tests** - `pytest` suite covering the teaching API and the legacy endpoints (`tests/`)
 
 ### Frontend (React + TypeScript + Vite)
 - **Type-Safe Codebase** - Strict TypeScript, with typed API responses and component props
@@ -273,7 +279,7 @@ We welcome contributions from educators, students, and developers! Here are some
 ### Getting Started with Contributions
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make sure `npm run typecheck` and `npm run lint` pass in `frontend/`
+3. Make sure `pytest` passes at the repository root, and `npm run typecheck` and `npm run lint` pass in `frontend/`
 4. Commit your changes (`git commit -m 'Add amazing feature'`)
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
