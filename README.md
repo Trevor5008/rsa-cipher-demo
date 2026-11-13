@@ -64,14 +64,14 @@ The lab exposes the values used in textbook RSA so learners can connect the inte
 
 | Learning Lab action | RSA concept |
 | --- | --- |
-| Choose or generate $p$ and $q$ | Select two distinct [prime numbers](docs/RSA-FOUNDATIONS.md#math-primes) |
+| Pick a preset or enter $p$ and $q$ | Select two distinct [prime numbers](docs/RSA-FOUNDATIONS.md#math-primes) |
 | Enter the public exponent | Choose $e$ with $\gcd(e, \varphi(n)) = 1$ ([Step 3](docs/RSA-FOUNDATIONS.md#eq-public-exponent)) |
-| Submit key data | Calculate $n = pq$ ([Step 1](docs/RSA-FOUNDATIONS.md#eq-modulus)), $\varphi(n) = (p - 1)(q - 1)$ ([Step 2](docs/RSA-FOUNDATIONS.md#eq-totient)), and the private exponent $d \equiv e^{-1} \pmod{\varphi(n)}$ ([Step 4](docs/RSA-FOUNDATIONS.md#eq-private-exponent)) |
-| Encrypt text | Encode text as an integer $m$, then calculate $c = m^e \bmod n$ ([encrypt](docs/RSA-FOUNDATIONS.md#eq-encrypt)) |
-| Decrypt ciphertext | Calculate $m = c^d \bmod n$ ([decrypt](docs/RSA-FOUNDATIONS.md#eq-decrypt)), then decode the integer |
-| Change prime bit lengths | Observe how modulus size affects [message capacity](docs/RSA-FOUNDATIONS.md#eq-message-range) and computation |
+| Watch the derived values update | Calculate $n = pq$ ([Step 1](docs/RSA-FOUNDATIONS.md#eq-modulus)), $\varphi(n) = (p - 1)(q - 1)$ ([Step 2](docs/RSA-FOUNDATIONS.md#eq-totient)), and the private exponent $d \equiv e^{-1} \pmod{\varphi(n)}$ ([Step 4](docs/RSA-FOUNDATIONS.md#eq-private-exponent)) |
+| Encrypt text | Encode each character as its code point $m$, then calculate $c = m^e \bmod n$ ([encrypt](docs/RSA-FOUNDATIONS.md#eq-encrypt)) |
+| Decrypt ciphertext | Calculate $m = c^d \bmod n$ ([decrypt](docs/RSA-FOUNDATIONS.md#eq-decrypt)) for each number, then turn the code point back into a character |
+| Switch between the Textbook and Bigger primes presets | Observe how modulus size affects [message capacity](docs/RSA-FOUNDATIONS.md#eq-message-range) |
 
-The encoded message must satisfy $0 \le m < n$: it must be smaller than the modulus. This is why a message can be too large for the selected key even when it appears short to a person.
+Each encoded value must satisfy $0 \le m < n$: it must be smaller than the modulus. This is why the small Textbook key ($n = 3233$) cannot encrypt characters whose code points are 3233 or larger, even though they look like ordinary text to a person.
 
 ## Educational Security Boundary
 
@@ -103,7 +103,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
 ### Phase 2: Student-Focused Redesign (In Progress)
 - **Educational Onboarding** - Welcome screen with learning objectives
-- **Step-by-Step Interface** - Replace modal-heavy design with guided learning flow
+- **Step-by-Step Interface** - Replace modal-heavy design with guided learning flow (guided workspace and key-pair panel done; live per-character encryption and decryption in progress, currently shown with sample data)
 - **Concept Explanations** - Add educational content before each section
 - **Visual Learning Aids** - Mathematical formulas, diagrams, and interactive elements
 - **Progress Tracking** - Show students where they are in the learning journey
@@ -118,10 +118,11 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 ## Educational Features
 
 ### Current Learning Features
-- **Interactive Key Generation** - Students can generate RSA key pairs with different prime number sizes
-- **Real-time Validation** - Immediate feedback on prime number validity and key compatibility
-- **Step-by-step Encryption/Decryption** - Watch the RSA process unfold with detailed explanations
-- **Visual Key Display** - Large numbers formatted for easy reading and understanding
+- **Guided Workspace** - One visible three-step workspace (key pair, input, output) with an Encrypt/Decrypt switch; no modals
+- **Key-Pair Presets** - Textbook (61, 53) and Bigger primes (1009, 1013) presets, plus editable custom `p`, `q`, and `e`
+- **Real-time Validation** - `n`, `φ(n)`, and `d` update as you type, with specific inline explanations for invalid values
+- **Active-Key Indicator** - Public key highlighted in Encrypt mode, private key in Decrypt mode
+- **How It Works** - Concept steps, a worked modular-exponentiation example, and a per-character trace table (sample data until live encryption and decryption land)
 - **RSA Foundations Guide** - Connect the demo to asymmetric encryption, hybrid systems, the RSA equations, and production limitations
 
 ### Planned Learning Enhancements
@@ -137,7 +138,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 ### For Students
 1. **Visit the live demo** (coming soon) or follow the setup instructions below
 2. **Read [RSA Foundations for Learners](docs/RSA-FOUNDATIONS.md)** to understand the purpose and vocabulary
-3. **Generate your first key pair** and identify `p`, `q`, `n`, `e`, and `d`
+3. **Pick a key preset or enter your own values** and identify `p`, `q`, `n`, `φ(n)`, `e`, and `d`
 4. **Encrypt and decrypt a short message** while matching each action to the equations
 5. **Try different parameters** to observe message-size and computation limits, not to create production keys
 
@@ -151,7 +152,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
 ### Prerequisites
 - Python 3.8+
-- Node.js 20.19+ (required by Vite 7)
+- Node.js 22.22+ or 24.15+ (required by the Vitest and jsdom test tooling; Vite 7 alone needs 20.19+)
 - Git
 
 ### Installation
@@ -184,11 +185,12 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
 4. **Environment Configuration**
    ```sh
-   # Create .env file in frontend directory
+   # Point the dev server at the local Flask backend
    cd frontend
-   echo "VITE_PROD_API_BASE_URL=https://rsa-cipher-demo-72f57f0cf894.herokuapp.com" > .env
-   echo "VITE_LOCAL_API_BASE_URL=http://127.0.0.1:5000" >> .env
+   echo "VITE_LOCAL_API_BASE_URL=http://127.0.0.1:5000" > .env
    ```
+
+   Production builds need no variables: Flask serves the built app, and API requests go to the same origin.
 
 5. **Run the Application**
    ```sh
@@ -216,6 +218,8 @@ Run these from the `frontend/` directory:
 | `npm run lint` | Lint the TypeScript sources with ESLint |
 | `npm run build` | Type-check, then build to `frontend/dist` (served by Flask) |
 | `npm run preview` | Preview the production build locally |
+| `npm test` | Run the component and unit tests once with Vitest |
+| `npm run test:watch` | Run Vitest in watch mode |
 
 ## Learning Objectives
 
@@ -248,12 +252,14 @@ After using this tool, students will understand:
 
 ```
 frontend/src/
-├── components/   # UI components (modals, text output, icons)
-├── hooks/        # State hooks (keys, text processing, modals, UI)
-├── services/     # rsaAPI: typed client for the Flask API
-├── types/        # Shared types (TextType, API response shapes)
-├── App.tsx       # Root component
-└── main.tsx      # Entry point
+├── components/workspace/  # Guided workspace: header, mode switch, step cards, key panel, how-it-works
+├── fixtures/             # Typed teaching-mode sample data (shared fixture from docs/TEACHING-API.md)
+├── hooks/                # useKeyPair: presets, live key derivation, validation state
+├── services/             # teachingAPI: typed client for the /teaching endpoints
+├── test/                 # Vitest setup and test fakes
+├── types/                # Teaching-mode API types (RSA values as decimal strings)
+├── App.tsx               # Root component: mode, inputs, and layout
+└── main.tsx              # Entry point
 ```
 
 ## Contributing
@@ -279,7 +285,7 @@ We welcome contributions from educators, students, and developers! Here are some
 ### Getting Started with Contributions
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make sure `pytest` passes at the repository root, and `npm run typecheck` and `npm run lint` pass in `frontend/`
+3. Make sure `pytest` passes at the repository root, and `npm run typecheck`, `npm run lint`, and `npm test` pass in `frontend/`
 4. Commit your changes (`git commit -m 'Add amazing feature'`)
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
