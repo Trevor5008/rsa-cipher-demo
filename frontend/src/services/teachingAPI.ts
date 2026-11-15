@@ -1,6 +1,7 @@
 import axios from "axios";
 import type {
   KeyFields,
+  TeachingEncryptResponse,
   TeachingErrorResponse,
   TeachingKey,
   TeachingValidationError,
@@ -19,6 +20,7 @@ export class TeachingValidationFailure extends Error {
 
 export interface TeachingAPI {
   deriveKey(fields: KeyFields, signal?: AbortSignal): Promise<TeachingKey>;
+  encrypt(text: string, e: string, n: string, signal?: AbortSignal): Promise<TeachingEncryptResponse>;
 }
 
 const isErrorResponse = (data: unknown): data is TeachingErrorResponse =>
@@ -42,4 +44,6 @@ export const getApiBaseUrl = (): string =>
 
 export const createTeachingAPI = (baseURL: string): TeachingAPI => ({
   deriveKey: (fields, signal) => post<TeachingKey>(`${baseURL}/teaching/keys`, fields, signal),
+  encrypt: (text, e, n, signal) =>
+    post<TeachingEncryptResponse>(`${baseURL}/teaching/encrypt`, { text, e, n }, signal),
 });

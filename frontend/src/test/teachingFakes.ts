@@ -1,7 +1,7 @@
 import { vi } from "vitest";
-import { FIXTURE_KEY } from "../fixtures/teaching";
+import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
 import { TeachingValidationFailure, type TeachingAPI } from "../services/teachingAPI";
-import type { KeyFields, TeachingKey } from "../types/teaching";
+import type { KeyFields, TeachingEncryptResponse, TeachingKey } from "../types/teaching";
 
 export const TEXTBOOK_KEY: TeachingKey = {
   p: "61",
@@ -27,8 +27,68 @@ export const deriveKnownKey = async (fields: KeyFields): Promise<TeachingKey> =>
   ]);
 };
 
-export const createFakeAPI = (deriveKey: TeachingAPI["deriveKey"] = deriveKnownKey) => {
-  const api = { deriveKey: vi.fn(deriveKey) };
+/** Returns the shared fixture for Bigger primes + "test"; other inputs get a simple synthetic response. */
+export const encryptKnownText = async (
+  text: string,
+  e: string,
+  n: string,
+): Promise<TeachingEncryptResponse> => {
+  if (text === "test" && e === FIXTURE_KEY.e && n === FIXTURE_KEY.n) {
+    return FIXTURE_ENCRYPT;
+  }
+
+  if (text === "test" && e === TEXTBOOK_KEY.e && n === TEXTBOOK_KEY.n) {
+    return {
+      ciphertext: ["855", "110", "2159", "855"],
+      display: "855 110 2159 855",
+      trace: [
+        { index: 1, character: "t", codePoint: "116", ciphertext: "855" },
+        { index: 2, character: "e", codePoint: "101", ciphertext: "110" },
+        { index: 3, character: "s", codePoint: "115", ciphertext: "2159" },
+        { index: 4, character: "t", codePoint: "116", ciphertext: "855" },
+      ],
+    };
+  }
+
+  const codePoints = Array.from(text).map((character) => character.codePointAt(0)!);
+  const modulus = Number(n);
+  const firstUnsupported = codePoints.findIndex((codePoint) => codePoint >= modulus);
+  if (firstUnsupported >= 0) {
+    const character = Array.from(text)[firstUnsupported];
+    const codePoint = codePoints[firstUnsupported];
+    throw new TeachingValidationFailure([
+      {
+        field: "text",
+        code: "unsupported_character",
+        message:
+          `Character ${firstUnsupported + 1} ("${character}", code point ${codePoint}) is too large for this key: ` +
+          `code points must be smaller than n = ${n}.`,
+        index: firstUnsupported + 1,
+      },
+    ]);
+  }
+
+  const ciphertext = codePoints.map((codePoint) => String((codePoint * 7) % modulus));
+  return {
+    ciphertext,
+    display: ciphertext.join(" "),
+    trace: Array.from(text).map((character, index) => ({
+      index: index + 1,
+      character,
+      codePoint: String(codePoints[index]),
+      ciphertext: ciphertext[index],
+    })),
+  };
+};
+
+export const createFakeAPI = (
+  deriveKey: TeachingAPI["deriveKey"] = deriveKnownKey,
+  encrypt: TeachingAPI["encrypt"] = encryptKnownText,
+) => {
+  const api = {
+    deriveKey: vi.fn(deriveKey),
+    encrypt: vi.fn(encrypt),
+  };
   return api satisfies TeachingAPI;
 };
 

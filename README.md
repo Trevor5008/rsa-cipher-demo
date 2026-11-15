@@ -103,7 +103,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
 ### Phase 2: Student-Focused Redesign (In Progress)
 - **Educational Onboarding** - Welcome screen with learning objectives
-- **Step-by-Step Interface** - Replace modal-heavy design with guided learning flow (guided workspace and key-pair panel done; live per-character encryption and decryption in progress, currently shown with sample data)
+- **Step-by-Step Interface** - Replace modal-heavy design with guided learning flow (guided workspace, key-pair panel, and live Encrypt done; live Decrypt still sample data)
 - **Concept Explanations** - Add educational content before each section
 - **Visual Learning Aids** - Mathematical formulas, diagrams, and interactive elements
 - **Progress Tracking** - Show students where they are in the learning journey
@@ -122,7 +122,8 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 - **Key-Pair Presets** - Textbook (61, 53) and Bigger primes (1009, 1013) presets, plus editable custom `p`, `q`, and `e`
 - **Real-time Validation** - `n`, `φ(n)`, and `d` update as you type, with specific inline explanations for invalid values
 - **Active-Key Indicator** - Public key highlighted in Encrypt mode, private key in Decrypt mode
-- **How It Works** - Concept steps, a worked modular-exponentiation example, and a per-character trace table (sample data until live encryption and decryption land)
+- **Live Encrypt Trace** - Ciphertext, worked example, and per-character table update as you type; Clear, Copy, and Decrypt this hand off into Decrypt mode
+- **How It Works** - Concept steps, a worked modular-exponentiation example, and a per-character trace table (live for Encrypt; sample data for Decrypt until that story lands)
 - **RSA Foundations Guide** - Connect the demo to asymmetric encryption, hybrid systems, the RSA equations, and production limitations
 
 ### Planned Learning Enhancements

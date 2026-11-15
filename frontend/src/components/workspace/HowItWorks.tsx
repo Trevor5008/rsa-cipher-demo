@@ -1,5 +1,6 @@
-import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT, FIXTURE_KEY } from "../../fixtures/teaching";
-import type { Mode } from "../../types/teaching";
+import { FIXTURE_DECRYPT, FIXTURE_KEY } from "../../fixtures/teaching";
+import type { EncryptStatus } from "../../hooks/useEncrypt";
+import type { Mode, TeachingEncryptResponse, TeachingKey } from "../../types/teaching";
 import ConceptStep from "./ConceptStep";
 import TeachingModeNotice from "./TeachingModeNotice";
 import TraceTable from "./TraceTable";
@@ -26,9 +27,24 @@ const STEPS: Record<Mode, { title: string; description: string }[]> = {
 
 interface HowItWorksProps {
   mode: Mode;
+  keyPair?: TeachingKey | null;
+  encryptStatus?: EncryptStatus;
+  encryptResult?: TeachingEncryptResponse | null;
 }
 
-export default function HowItWorks({ mode }: HowItWorksProps) {
+export default function HowItWorks({
+  mode,
+  keyPair = null,
+  encryptStatus = "idle",
+  encryptResult = null,
+}: HowItWorksProps) {
+  const subtitle =
+    mode === "encrypt"
+      ? encryptStatus === "ready" && encryptResult
+        ? "Updates live as you type"
+        : "Type a message with a valid key to see every character encrypted"
+      : "Example: the message “test” with the Bigger primes key";
+
   return (
     <section
       aria-labelledby="how-it-works-title"
@@ -38,7 +54,7 @@ export default function HowItWorks({ mode }: HowItWorksProps) {
         <h2 id="how-it-works-title" className="text-lg font-semibold">
           How it works
         </h2>
-        <p className="text-xs text-gray-600">Example: the message “test” with the Bigger primes key</p>
+        <p className="text-xs text-gray-600">{subtitle}</p>
       </div>
 
       <ol className="grid gap-3 md:grid-cols-3">
@@ -48,10 +64,7 @@ export default function HowItWorks({ mode }: HowItWorksProps) {
       </ol>
 
       {mode === "encrypt" ? (
-        <>
-          <WorkedExample mode="encrypt" row={FIXTURE_ENCRYPT.trace[0]} keyPair={FIXTURE_KEY} />
-          <TraceTable mode="encrypt" rows={FIXTURE_ENCRYPT.trace} caption="Encryption of each character (sample)" />
-        </>
+        <EncryptExplanation status={encryptStatus} result={encryptResult} keyPair={keyPair} />
       ) : (
         <>
           <WorkedExample mode="decrypt" row={FIXTURE_DECRYPT.trace[0]} keyPair={FIXTURE_KEY} />
@@ -61,5 +74,48 @@ export default function HowItWorks({ mode }: HowItWorksProps) {
 
       <TeachingModeNotice />
     </section>
+  );
+}
+
+function EncryptExplanation({
+  status,
+  result,
+  keyPair,
+}: {
+  status: EncryptStatus;
+  result: TeachingEncryptResponse | null;
+  keyPair: TeachingKey | null;
+}) {
+  if (status === "ready" && result && keyPair && result.trace.length > 0) {
+    return (
+      <>
+        <WorkedExample mode="encrypt" row={result.trace[0]} keyPair={keyPair} />
+        <TraceTable mode="encrypt" rows={result.trace} caption="Encryption of each character" />
+      </>
+    );
+  }
+
+  if (status === "loading") {
+    return (
+      <p role="status" className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        Calculating the worked example and table…
+      </p>
+    );
+  }
+
+  if (status === "invalid" || status === "error") {
+    return (
+      <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        Fix the message or try again to see the worked example and table.
+      </p>
+    );
+  }
+
+  return (
+    <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+      {status === "empty"
+        ? "The worked example and table appear here once you type a message."
+        : "Build a valid key pair and type a message to see each character encrypted."}
+    </p>
   );
 }
