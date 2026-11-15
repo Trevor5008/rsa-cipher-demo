@@ -1,11 +1,17 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { FIXTURE_KEY } from "./fixtures/teaching";
+import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "./fixtures/teaching";
 import { TeachingValidationFailure } from "./services/teachingAPI";
-import { TEXTBOOK_KEY, createFakeAPI, deferred, deriveKnownKey } from "./test/teachingFakes";
-import type { TeachingKey } from "./types/teaching";
+import {
+  TEXTBOOK_KEY,
+  createFakeAPI,
+  deferred,
+  deriveKnownKey,
+  encryptKnownText,
+} from "./test/teachingFakes";
+import type { TeachingEncryptResponse, TeachingKey } from "./types/teaching";
 
 const renderApp = (api = createFakeAPI()) => {
   const user = userEvent.setup();
@@ -27,10 +33,17 @@ const expectDerived = async (n: string, phi: string, d: string) => {
   expect(derivedValue("d = e⁻¹ mod φ(n)")).toHaveTextContent(d);
 };
 
+const expectLiveCiphertext = async (display = FIXTURE_ENCRYPT.display) => {
+  await waitFor(() => {
+    expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent(display);
+  });
+};
+
 describe("guided workspace layout", () => {
   it("shows the whole workflow as three numbered cards without any modal", async () => {
     renderApp();
     await expectDerived("1022117", "1020096", "832193");
+    await expectLiveCiphertext();
 
     expect(screen.getAllByRole("region", { name: /^Step \d:/ })).toEqual([
       screen.getByRole("region", { name: "Step 1: Build a key pair" }),
@@ -63,23 +76,40 @@ describe("guided workspace layout", () => {
       publicKey: { e: "65537", n: big },
       privateKey: { d: big, n: big },
     };
-    renderApp(createFakeAPI(async () => longKey));
+    const longEncrypt: TeachingEncryptResponse = {
+      ...FIXTURE_ENCRYPT,
+      display: `${big} ${big}`,
+      ciphertext: [big, big],
+      trace: [
+        { index: 1, character: "t", codePoint: "116", ciphertext: big },
+        { index: 2, character: "e", codePoint: "101", ciphertext: big },
+      ],
+    };
+    renderApp(createFakeAPI(async () => longKey, async () => longEncrypt));
 
     await screen.findByText("Key pair ready.");
     expect(derivedValue("n = p × q")).toHaveClass("break-all", "min-w-0");
     expect(within(keyCard("Public key")).getByText(`(e = 65537, n = ${big})`)).toHaveClass("break-all");
-    expect(screen.getByRole("region", { name: "Encryption of each character (sample)" })).toHaveClass("overflow-x-auto");
+    expect(await screen.findByRole("region", { name: "Ciphertext output" })).toHaveClass("break-all");
+    expect(await screen.findByRole("region", { name: "Encryption of each character" })).toHaveClass("overflow-x-auto");
   });
 
-  it("renders the sample worked example, trace table, and teaching-mode notice", async () => {
-    renderApp();
-    await screen.findByText("Key pair ready.");
+  it("renders the live worked example, trace table, and teaching-mode notice for the test fixture", async () => {
+    const { api } = renderApp();
+    await expectLiveCiphertext();
 
-    expect(screen.getByText("Worked example: the first character, “t”")).toBeInTheDocument();
-    const table = screen.getByRole("table", { name: "Encryption of each character (sample)" });
+    expect(api.encrypt).toHaveBeenCalledWith("test", "65537", "1022117", expect.any(AbortSignal));
+    const example = screen.getByText("Worked example: the first character, “t”").closest("figure");
+    expect(example).toHaveTextContent("116");
+    expect(example).toHaveTextContent("65537");
+    expect(example).toHaveTextContent("1022117");
+    expect(example).toHaveTextContent("924799");
+
+    const table = screen.getByRole("table", { name: "Encryption of each character" });
     expect(within(table).getAllByRole("row")).toHaveLength(5);
     expect(within(table).getAllByRole("row")[1]).toHaveTextContent("1t116924799");
     expect(screen.getByRole("complementary", { name: "Teaching mode" })).toHaveTextContent(/OAEP/);
+    expect(screen.queryByText(/^Sample$/)).not.toBeInTheDocument();
   });
 });
 
@@ -106,6 +136,7 @@ describe("key presets and custom values", () => {
     expect(screen.getByLabelText("Exponent e")).toHaveValue("17");
     await expectDerived(TEXTBOOK_KEY.n, TEXTBOOK_KEY.phi, TEXTBOOK_KEY.d);
     expect(within(keyCard("Private key")).getByText("(d = 2753, n = 3233)")).toBeInTheDocument();
+    await expectLiveCiphertext("855 110 2159 855");
   });
 
   it("editing a field switches to custom values and never shows stale derived values", async () => {
@@ -134,7 +165,7 @@ describe("validation, loading, and failure states", () => {
       ]);
     });
     const { user } = renderApp(api);
-    await screen.findByText("Key pair ready.");
+    await expectLiveCiphertext();
 
     const p = screen.getByLabelText("Prime p");
     await user.clear(p);
@@ -150,21 +181,21 @@ describe("validation, loading, and failure states", () => {
     expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent("Waiting for a valid key pair.");
     const message = screen.getByLabelText("Plain text to encrypt with the public key");
     expect(message).toHaveAccessibleDescription("Build a valid key pair in step 1 to encrypt this message.");
-    await user.type(message, "!");
-    expect(message).toHaveValue("test!");
+    expect(message).toHaveValue("test");
+    expect(message).toBeEnabled();
 
     await user.clear(p);
     await user.type(p, "1009");
     await expectDerived("1022117", "1020096", "832193");
     expect(p).not.toHaveAttribute("aria-invalid");
-    expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent("924799 621270 2637 924799");
+    await expectLiveCiphertext();
   });
 
   it("announces loading while the key is being derived", async () => {
     const pending = deferred<TeachingKey>();
     renderApp(createFakeAPI(() => pending.promise));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Calculating the key pair…");
+    expect(screen.getByText("Calculating the key pair…")).toBeInTheDocument();
     expect(derivedValue("n = p × q")).toHaveTextContent("Calculating…");
     expect(screen.getByLabelText("Prime p")).toHaveValue("1009");
 
@@ -191,10 +222,142 @@ describe("validation, loading, and failure states", () => {
   });
 });
 
+describe("live encryption", () => {
+  it("shows an empty instructional state without calling encrypt when plaintext is cleared", async () => {
+    const { api, user } = renderApp();
+    await expectLiveCiphertext();
+    api.encrypt.mockClear();
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+
+    expect(screen.getByLabelText("Plain text to encrypt with the public key")).toHaveValue("");
+    expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent(
+      "Type a message to see each character encrypted.",
+    );
+    expect(screen.getByText(/worked example and table appear here/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bigger primes (1009, 1013)" })).toHaveAttribute("aria-pressed", "true");
+    expect(derivedValue("n = p × q")).toHaveTextContent("1022117");
+    expect(api.encrypt).not.toHaveBeenCalled();
+  });
+
+  it("shows unsupported-character feedback without erasing the plaintext or key", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+
+    await user.click(screen.getByRole("button", { name: "Textbook (61, 53)" }));
+    await expectDerived(TEXTBOOK_KEY.n, TEXTBOOK_KEY.phi, TEXTBOOK_KEY.d);
+    await expectLiveCiphertext("855 110 2159 855");
+
+    const message = screen.getByLabelText("Plain text to encrypt with the public key");
+    fireEvent.change(message, { target: { value: "hi😀" } });
+
+    expect(await screen.findAllByText(/Character 3/)).not.toHaveLength(0);
+    expect(message).toHaveValue("hi😀");
+    expect(message).toHaveAttribute("aria-invalid", "true");
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/too large for this key/);
+    expect(alert).not.toHaveTextContent("855 110 2159 855");
+    expect(screen.getByLabelText("Prime p")).toHaveValue("61");
+    expect(derivedValue("n = p × q")).toHaveTextContent("3233");
+  });
+
+  it("ignores a late response for older plaintext", async () => {
+    const first = deferred<TeachingEncryptResponse>();
+    const second = deferred<TeachingEncryptResponse>();
+    const api = createFakeAPI();
+    api.encrypt
+      .mockImplementationOnce(() => first.promise)
+      .mockImplementationOnce(() => second.promise)
+      .mockImplementation(encryptKnownText);
+
+    renderApp(api);
+    await screen.findByText("Encrypting…");
+    const firstSignal = api.encrypt.mock.calls[0][3] as AbortSignal;
+
+    const message = screen.getByLabelText("Plain text to encrypt with the public key");
+    fireEvent.change(message, { target: { value: "" } });
+    await screen.findByText("Type a message to see each character encrypted.");
+    expect(firstSignal.aborted).toBe(true);
+
+    fireEvent.change(message, { target: { value: "ok" } });
+    await waitFor(() => expect(api.encrypt).toHaveBeenCalledTimes(2));
+
+    const latest: TeachingEncryptResponse = {
+      ciphertext: ["1", "2"],
+      display: "1 2",
+      trace: [
+        { index: 1, character: "o", codePoint: "111", ciphertext: "1" },
+        { index: 2, character: "k", codePoint: "107", ciphertext: "2" },
+      ],
+    };
+    second.resolve(latest);
+    first.resolve(FIXTURE_ENCRYPT);
+
+    await expectLiveCiphertext("1 2");
+    const table = screen.getByRole("table", { name: "Encryption of each character" });
+    expect(within(table).getAllByRole("row")[1]).toHaveTextContent("1o1111");
+    expect(within(table).getAllByRole("row")[2]).toHaveTextContent("2k1072");
+  });
+
+  it("copies only the ciphertext and announces success without moving focus", async () => {
+    renderApp();
+    await expectLiveCiphertext();
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      writable: true,
+      value: { writeText },
+    });
+
+    const copy = screen.getByRole("button", { name: "Copy" });
+    expect(copy).toBeEnabled();
+    copy.focus();
+    fireEvent.click(copy);
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(FIXTURE_ENCRYPT.display));
+    expect(screen.getByText("Ciphertext copied")).toBeInTheDocument();
+    expect(document.activeElement).toBe(copy);
+  });
+
+  it("Decrypt this switches to Decrypt mode and carries the live ciphertext", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+
+    await user.click(screen.getByRole("button", { name: "Decrypt this →" }));
+
+    expect(screen.getByRole("radio", { name: "Decrypt" })).toBeChecked();
+    expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
+      FIXTURE_ENCRYPT.display,
+    );
+    expect(screen.getByRole("region", { name: "Recovered message output" })).toHaveTextContent("test");
+    expect(screen.getByRole("table", { name: "Decryption of each value (sample)" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Teaching mode" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Encrypt" }));
+    expect(screen.getByLabelText("Plain text to encrypt with the public key")).toHaveValue("test");
+    await expectLiveCiphertext();
+  });
+
+  it("reports encrypt request failures with retry and keeps the plaintext", async () => {
+    const api = createFakeAPI();
+    api.encrypt.mockRejectedValueOnce(new Error("Network Error"));
+    const { user } = renderApp(api);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("couldn't encrypt");
+    expect(screen.getByLabelText("Plain text to encrypt with the public key")).toHaveValue("test");
+    expect(screen.getByLabelText("Prime p")).toHaveValue("1009");
+
+    await user.click(within(alert).getByRole("button", { name: "Try again" }));
+    await expectLiveCiphertext();
+  });
+});
+
 describe("mode switch", () => {
   it("moves the In use badge from the public key to the private key and updates the panels", async () => {
     const { user } = renderApp();
-    await screen.findByText("Key pair ready.");
+    await expectLiveCiphertext();
 
     expect(screen.getByRole("radio", { name: "Encrypt" })).toBeChecked();
     expect(within(keyCard("Public key")).getByText("In use")).toBeInTheDocument();
@@ -254,12 +417,17 @@ describe("mode switch", () => {
     expect(screen.getByRole("group", { name: "Mode" })).toBeInTheDocument();
   });
 
-  it("clears only the current mode's input", async () => {
+  it("clears only the current mode's input and the live encrypt output", async () => {
     const { user } = renderApp();
+    await expectLiveCiphertext();
+
     await user.click(screen.getByRole("button", { name: "Clear" }));
 
     expect(screen.getByLabelText("Plain text to encrypt with the public key")).toHaveValue("");
     expect(screen.getByText("0 characters")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent(
+      "Type a message to see each character encrypted.",
+    );
 
     await user.click(screen.getByRole("radio", { name: "Decrypt" }));
     expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(

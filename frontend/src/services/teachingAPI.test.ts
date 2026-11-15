@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosResponse } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FIXTURE_KEY } from "../fixtures/teaching";
+import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
 import { TeachingValidationFailure, createTeachingAPI } from "./teachingAPI";
 
 const errorResponse = (status: number, data: unknown): AxiosError =>
@@ -55,5 +55,42 @@ describe("createTeachingAPI().deriveKey", () => {
 
     expect(failure).toBe(error);
     expect(failure).not.toBeInstanceOf(TeachingValidationFailure);
+  });
+});
+
+describe("createTeachingAPI().encrypt", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts text and the public key as decimal strings and returns the encrypt response", async () => {
+    const post = vi.spyOn(axios, "post").mockResolvedValue({ data: FIXTURE_ENCRYPT });
+    const signal = new AbortController().signal;
+
+    const result = await createTeachingAPI("http://api.test").encrypt("test", "65537", "1022117", signal);
+
+    expect(result).toEqual(FIXTURE_ENCRYPT);
+    expect(post).toHaveBeenCalledWith(
+      "http://api.test/teaching/encrypt",
+      { text: "test", e: "65537", n: "1022117" },
+      { signal },
+    );
+  });
+
+  it("maps a 400 response to a TeachingValidationFailure", async () => {
+    const errors = [
+      {
+        field: "text",
+        code: "unsupported_character",
+        message: 'Character 3 ("😀", code point 128512) is too large for this key: code points must be smaller than n = 3233.',
+        index: 3,
+      },
+    ];
+    vi.spyOn(axios, "post").mockRejectedValue(errorResponse(400, { errors }));
+
+    const failure = await createTeachingAPI("").encrypt("hi😀", "17", "3233").catch((error) => error);
+
+    expect(failure).toBeInstanceOf(TeachingValidationFailure);
+    expect((failure as TeachingValidationFailure).errors).toEqual(errors);
   });
 });

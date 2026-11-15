@@ -29,14 +29,29 @@ interface MessagePanelProps {
   mode: Mode;
   value: string;
   keyReady: boolean;
+  textError?: string | null;
   onChange: (value: string) => void;
   onClear: () => void;
 }
 
-export default function MessagePanel({ mode, value, keyReady, onChange, onClear }: MessagePanelProps) {
+export default function MessagePanel({
+  mode,
+  value,
+  keyReady,
+  textError = null,
+  onChange,
+  onClear,
+}: MessagePanelProps) {
   const copy = COPY[mode];
   const inputId = `message-input-${mode}`;
   const blockedId = `${inputId}-blocked`;
+  const errorId = `${inputId}-error`;
+  const describedBy = [
+    !keyReady ? blockedId : null,
+    textError ? errorId : null,
+  ]
+    .filter(Boolean)
+    .join(" ") || undefined;
 
   return (
     <StepCard step={2} title={copy.title}>
@@ -51,14 +66,20 @@ export default function MessagePanel({ mode, value, keyReady, onChange, onClear 
           placeholder={copy.placeholder}
           rows={10}
           spellCheck={mode === "encrypt"}
-          aria-describedby={keyReady ? undefined : blockedId}
-          className={`min-h-48 w-full flex-1 resize-y rounded-lg border border-gray-300 p-3 text-sm ${focusRing} ${
+          aria-invalid={textError ? true : undefined}
+          aria-describedby={describedBy}
+          className={`min-h-48 w-full flex-1 resize-y rounded-lg border p-3 text-sm ${focusRing} ${
             mode === "decrypt" ? "break-all font-mono" : ""
-          }`}
+          } ${textError ? "border-red-600 bg-red-50" : "border-gray-300"}`}
         />
         {!keyReady && (
           <p id={blockedId} className="text-sm text-amber-800">
             {copy.blocked}
+          </p>
+        )}
+        {textError && (
+          <p id={errorId} className="text-sm text-red-700">
+            {textError}
           </p>
         )}
       </div>

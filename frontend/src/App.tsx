@@ -5,6 +5,7 @@ import KeyPairPanel from "./components/workspace/KeyPairPanel";
 import MessagePanel from "./components/workspace/MessagePanel";
 import OutputPanel from "./components/workspace/OutputPanel";
 import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT } from "./fixtures/teaching";
+import { useEncrypt } from "./hooks/useEncrypt";
 import { useKeyPair } from "./hooks/useKeyPair";
 import { createTeachingAPI, getApiBaseUrl, type TeachingAPI } from "./services/teachingAPI";
 import type { Mode } from "./types/teaching";
@@ -25,7 +26,21 @@ function App({ api }: AppProps) {
   });
 
   const keyReady = keyPair.status === "valid";
+  const encrypt = useEncrypt({
+    api: teachingAPI,
+    enabled: mode === "encrypt" && keyReady,
+    text: inputs.encrypt,
+    e: keyPair.key?.publicKey.e ?? null,
+    n: keyPair.key?.publicKey.n ?? null,
+  });
+
   const setInput = (value: string) => setInputs((current) => ({ ...current, [mode]: value }));
+
+  const handleDecryptThis = () => {
+    if (!encrypt.result) return;
+    setInputs((current) => ({ ...current, decrypt: encrypt.result!.display }));
+    setMode("decrypt");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900">
@@ -37,12 +52,26 @@ function App({ api }: AppProps) {
             mode={mode}
             value={inputs[mode]}
             keyReady={keyReady}
+            textError={mode === "encrypt" && encrypt.status === "invalid" ? encrypt.error : null}
             onChange={setInput}
             onClear={() => setInput("")}
           />
-          <OutputPanel mode={mode} keyReady={keyReady} />
+          <OutputPanel
+            mode={mode}
+            keyReady={keyReady}
+            encryptStatus={encrypt.status}
+            encryptResult={encrypt.result}
+            encryptError={encrypt.error}
+            onRetryEncrypt={encrypt.retry}
+            onDecryptThis={handleDecryptThis}
+          />
         </div>
-        <HowItWorks mode={mode} />
+        <HowItWorks
+          mode={mode}
+          keyPair={keyPair.key}
+          encryptStatus={encrypt.status}
+          encryptResult={encrypt.result}
+        />
       </main>
     </div>
   );
