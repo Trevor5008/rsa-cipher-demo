@@ -5,6 +5,7 @@ import KeyPairPanel from "./components/workspace/KeyPairPanel";
 import MessagePanel from "./components/workspace/MessagePanel";
 import OutputPanel from "./components/workspace/OutputPanel";
 import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT } from "./fixtures/teaching";
+import { useDecrypt } from "./hooks/useDecrypt";
 import { useEncrypt } from "./hooks/useEncrypt";
 import { useKeyPair } from "./hooks/useKeyPair";
 import { createTeachingAPI, getApiBaseUrl, type TeachingAPI } from "./services/teachingAPI";
@@ -33,6 +34,13 @@ function App({ api }: AppProps) {
     e: keyPair.key?.publicKey.e ?? null,
     n: keyPair.key?.publicKey.n ?? null,
   });
+  const decrypt = useDecrypt({
+    api: teachingAPI,
+    enabled: mode === "decrypt" && keyReady,
+    ciphertext: inputs.decrypt,
+    d: keyPair.key?.privateKey.d ?? null,
+    n: keyPair.key?.privateKey.n ?? null,
+  });
 
   const setInput = (value: string) => setInputs((current) => ({ ...current, [mode]: value }));
 
@@ -41,6 +49,19 @@ function App({ api }: AppProps) {
     setInputs((current) => ({ ...current, decrypt: encrypt.result!.display }));
     setMode("decrypt");
   };
+
+  const handleEncryptAgain = () => {
+    if (!decrypt.result) return;
+    setInputs((current) => ({ ...current, encrypt: decrypt.result!.message }));
+    setMode("encrypt");
+  };
+
+  const textError =
+    mode === "encrypt" && encrypt.status === "invalid"
+      ? encrypt.error
+      : mode === "decrypt" && decrypt.status === "invalid"
+        ? decrypt.error
+        : null;
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900">
@@ -52,7 +73,12 @@ function App({ api }: AppProps) {
             mode={mode}
             value={inputs[mode]}
             keyReady={keyReady}
-            textError={mode === "encrypt" && encrypt.status === "invalid" ? encrypt.error : null}
+            validatedCount={
+              mode === "decrypt" && decrypt.status === "ready" && decrypt.result
+                ? decrypt.result.trace.length
+                : null
+            }
+            textError={textError}
             onChange={setInput}
             onClear={() => setInput("")}
           />
@@ -64,6 +90,11 @@ function App({ api }: AppProps) {
             encryptError={encrypt.error}
             onRetryEncrypt={encrypt.retry}
             onDecryptThis={handleDecryptThis}
+            decryptStatus={decrypt.status}
+            decryptResult={decrypt.result}
+            decryptError={decrypt.error}
+            onRetryDecrypt={decrypt.retry}
+            onEncryptAgain={handleEncryptAgain}
           />
         </div>
         <HowItWorks
@@ -71,6 +102,8 @@ function App({ api }: AppProps) {
           keyPair={keyPair.key}
           encryptStatus={encrypt.status}
           encryptResult={encrypt.result}
+          decryptStatus={decrypt.status}
+          decryptResult={decrypt.result}
         />
       </main>
     </div>

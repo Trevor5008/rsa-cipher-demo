@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosResponse } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
+import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
 import { TeachingValidationFailure, createTeachingAPI } from "./teachingAPI";
 
 const errorResponse = (status: number, data: unknown): AxiosError =>
@@ -89,6 +89,50 @@ describe("createTeachingAPI().encrypt", () => {
     vi.spyOn(axios, "post").mockRejectedValue(errorResponse(400, { errors }));
 
     const failure = await createTeachingAPI("").encrypt("hi😀", "17", "3233").catch((error) => error);
+
+    expect(failure).toBeInstanceOf(TeachingValidationFailure);
+    expect((failure as TeachingValidationFailure).errors).toEqual(errors);
+  });
+});
+
+describe("createTeachingAPI().decrypt", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts ciphertext and the private key as decimal strings and returns the decrypt response", async () => {
+    const post = vi.spyOn(axios, "post").mockResolvedValue({ data: FIXTURE_DECRYPT });
+    const signal = new AbortController().signal;
+
+    const result = await createTeachingAPI("http://api.test").decrypt(
+      "924799 621270 2637 924799",
+      "832193",
+      "1022117",
+      signal,
+    );
+
+    expect(result).toEqual(FIXTURE_DECRYPT);
+    expect(post).toHaveBeenCalledWith(
+      "http://api.test/teaching/decrypt",
+      { ciphertext: "924799 621270 2637 924799", d: "832193", n: "1022117" },
+      { signal },
+    );
+  });
+
+  it("maps a 400 response to a TeachingValidationFailure", async () => {
+    const errors = [
+      {
+        field: "ciphertext",
+        code: "not_integer",
+        message: 'Value 2 ("abc") must be a non-negative whole number written with the digits 0-9.',
+        index: 2,
+      },
+    ];
+    vi.spyOn(axios, "post").mockRejectedValue(errorResponse(400, { errors }));
+
+    const failure = await createTeachingAPI("")
+      .decrypt("924799 abc", "832193", "1022117")
+      .catch((error) => error);
 
     expect(failure).toBeInstanceOf(TeachingValidationFailure);
     expect((failure as TeachingValidationFailure).errors).toEqual(errors);

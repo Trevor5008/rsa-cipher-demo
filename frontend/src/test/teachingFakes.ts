@@ -1,7 +1,12 @@
 import { vi } from "vitest";
-import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
+import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT, FIXTURE_KEY } from "../fixtures/teaching";
 import { TeachingValidationFailure, type TeachingAPI } from "../services/teachingAPI";
-import type { KeyFields, TeachingEncryptResponse, TeachingKey } from "../types/teaching";
+import type {
+  KeyFields,
+  TeachingDecryptResponse,
+  TeachingEncryptResponse,
+  TeachingKey,
+} from "../types/teaching";
 
 export const TEXTBOOK_KEY: TeachingKey = {
   p: "61",
@@ -81,13 +86,96 @@ export const encryptKnownText = async (
   };
 };
 
+/** Returns the shared fixture for Bigger primes + the fixture display; validates tokens otherwise. */
+export const decryptKnownText = async (
+  ciphertext: string,
+  d: string,
+  n: string,
+): Promise<TeachingDecryptResponse> => {
+  const tokens = ciphertext.split(/\s+/).filter(Boolean);
+  const modulus = Number(n);
+
+  for (const [offset, token] of tokens.entries()) {
+    const index = offset + 1;
+    if (!/^[0-9]+$/.test(token)) {
+      throw new TeachingValidationFailure([
+        {
+          field: "ciphertext",
+          code: "not_integer",
+          message: `Value ${index} ("${token}") must be a non-negative whole number written with the digits 0-9.`,
+          index,
+        },
+      ]);
+    }
+    if (Number(token) >= modulus) {
+      throw new TeachingValidationFailure([
+        {
+          field: "ciphertext",
+          code: "out_of_range",
+          message: `Value ${index} must be smaller than n = ${n}.`,
+          index,
+        },
+      ]);
+    }
+  }
+
+  const normalized = tokens.join(" ");
+  if (normalized === FIXTURE_ENCRYPT.display && d === FIXTURE_KEY.d && n === FIXTURE_KEY.n) {
+    return FIXTURE_DECRYPT;
+  }
+
+  if (normalized === "855 110 2159 855" && d === TEXTBOOK_KEY.d && n === TEXTBOOK_KEY.n) {
+    return {
+      message: "test",
+      trace: [
+        { index: 1, ciphertext: "855", codePoint: "116", character: "t" },
+        { index: 2, ciphertext: "110", codePoint: "101", character: "e" },
+        { index: 3, ciphertext: "2159", codePoint: "115", character: "s" },
+        { index: 4, ciphertext: "855", codePoint: "116", character: "t" },
+      ],
+    };
+  }
+
+  // Synthetic invertible mapping for other ASCII-range tests: m = c / 7 when divisible.
+  const codePoints = tokens.map((token) => {
+    const value = Number(token);
+    return value % 7 === 0 ? value / 7 : value % 128;
+  });
+  if (codePoints.some((codePoint) => codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff))) {
+    const index = codePoints.findIndex(
+      (codePoint) => codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff),
+    ) + 1;
+    throw new TeachingValidationFailure([
+      {
+        field: "ciphertext",
+        code: "invalid_code_point",
+        message: `Value ${index} decrypts to a number that is not a valid Unicode character.`,
+        index,
+      },
+    ]);
+  }
+
+  const characters = codePoints.map((codePoint) => String.fromCodePoint(codePoint));
+  return {
+    message: characters.join(""),
+    trace: tokens.map((token, offset) => ({
+      index: offset + 1,
+      ciphertext: token,
+      codePoint: String(codePoints[offset]),
+      character: characters[offset],
+    })),
+  };
+};
+
 export const createFakeAPI = (
   deriveKey: TeachingAPI["deriveKey"] = deriveKnownKey,
   encrypt: TeachingAPI["encrypt"] = encryptKnownText,
+  decrypt: TeachingAPI["decrypt"] = decryptKnownText,
 ) => {
   const api = {
     deriveKey: vi.fn(deriveKey),
     encrypt: vi.fn(encrypt),
+    decrypt: vi.fn(decrypt),
   };
   return api satisfies TeachingAPI;
 };

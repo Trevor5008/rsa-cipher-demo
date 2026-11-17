@@ -19,25 +19,44 @@ const COPY: Record<Mode, { title: string; label: string; placeholder: string; bl
 
 const plural = (count: number, singular: string) => `${count} ${singular}${count === 1 ? "" : "s"}`;
 
-/** Characters are counted per Unicode code point, matching how teaching mode encrypts them. */
-const describeCount = (mode: Mode, value: string) =>
-  mode === "encrypt"
-    ? plural(Array.from(value).length, "character")
-    : plural(value.split(/\s+/).filter(Boolean).length, "number");
-
 interface MessagePanelProps {
   mode: Mode;
   value: string;
   keyReady: boolean;
+  /** When Decrypt is ready, the validated token count from the API response (`trace.length`). */
+  validatedCount?: number | null;
   textError?: string | null;
   onChange: (value: string) => void;
   onClear: () => void;
 }
 
+/**
+ * Encrypt counts Unicode code points in the input.
+ * Decrypt shows the validated response length when ready; otherwise labels raw
+ * whitespace-separated tokens so invalid input is never presented as decrypted numbers.
+ */
+const describeCount = (mode: Mode, value: string, validatedCount: number | null) => {
+  if (mode === "encrypt") {
+    return plural(Array.from(value).length, "character");
+  }
+
+  if (validatedCount !== null) {
+    return plural(validatedCount, "number");
+  }
+
+  const tokens = value.split(/\s+/).filter(Boolean).length;
+  if (tokens === 0) {
+    return "0 numbers";
+  }
+
+  return plural(tokens, "token");
+};
+
 export default function MessagePanel({
   mode,
   value,
   keyReady,
+  validatedCount = null,
   textError = null,
   onChange,
   onClear,
@@ -85,7 +104,7 @@ export default function MessagePanel({
       </div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-gray-600" aria-live="polite">
-          {describeCount(mode, value)}
+          {describeCount(mode, value, validatedCount)}
         </p>
         <button type="button" onClick={onClear} className={secondaryButton}>
           Clear
