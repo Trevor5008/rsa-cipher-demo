@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
-import { FIXTURE_DECRYPT } from "../../fixtures/teaching";
+import type { DecryptStatus } from "../../hooks/useDecrypt";
 import type { EncryptStatus } from "../../hooks/useEncrypt";
-import type { Mode, TeachingEncryptResponse } from "../../types/teaching";
+import type { Mode, TeachingDecryptResponse, TeachingEncryptResponse } from "../../types/teaching";
 import StepCard from "./StepCard";
 import { focusRing, modeTheme, secondaryButton } from "./styles";
 
@@ -13,6 +13,11 @@ interface OutputPanelProps {
   encryptError?: string | null;
   onRetryEncrypt?: () => void;
   onDecryptThis?: () => void;
+  decryptStatus?: DecryptStatus;
+  decryptResult?: TeachingDecryptResponse | null;
+  decryptError?: string | null;
+  onRetryDecrypt?: () => void;
+  onEncryptAgain?: () => void;
 }
 
 export default function OutputPanel({
@@ -23,9 +28,23 @@ export default function OutputPanel({
   encryptError = null,
   onRetryEncrypt,
   onDecryptThis,
+  decryptStatus = "idle",
+  decryptResult = null,
+  decryptError = null,
+  onRetryDecrypt,
+  onEncryptAgain,
 }: OutputPanelProps) {
   if (mode === "decrypt") {
-    return <DecryptSampleOutput keyReady={keyReady} />;
+    return (
+      <DecryptOutput
+        keyReady={keyReady}
+        status={decryptStatus}
+        result={decryptResult}
+        error={decryptError}
+        onRetry={onRetryDecrypt}
+        onEncryptAgain={onEncryptAgain}
+      />
+    );
   }
 
   return (
@@ -37,39 +56,6 @@ export default function OutputPanel({
       onRetry={onRetryEncrypt}
       onDecryptThis={onDecryptThis}
     />
-  );
-}
-
-function DecryptSampleOutput({ keyReady }: { keyReady: boolean }) {
-  const theme = modeTheme.decrypt;
-
-  return (
-    <StepCard
-      step={3}
-      title="Recovered message"
-      description="If the private key matches, your original text comes back"
-    >
-      <div className="flex min-h-0 flex-1 flex-col gap-2">
-        {keyReady ? (
-          <>
-            <p className="text-xs font-medium text-gray-600">
-              <span className="mr-2 rounded-full bg-gray-200 px-2 py-0.5 font-semibold text-gray-800">Sample</span>
-              Example for the message “test” with the Bigger primes key. Live decryption is coming soon.
-            </p>
-            <div
-              role="region"
-              aria-label="Recovered message output"
-              tabIndex={0}
-              className={`min-h-48 flex-1 overflow-auto whitespace-pre-wrap break-all rounded-lg border p-3 text-sm ${theme.tint} ${theme.border} ${focusRing}`}
-            >
-              {FIXTURE_DECRYPT.message}
-            </div>
-          </>
-        ) : (
-          <WaitingRegion label="Recovered message output" />
-        )}
-      </div>
-    </StepCard>
   );
 }
 
@@ -172,6 +158,112 @@ function EncryptOutput({ keyReady, status, result, error, onRetry, onDecryptThis
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${modeTheme.decrypt.solid} ${focusRing} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             Decrypt this →
+          </button>
+        </div>
+      </div>
+    </StepCard>
+  );
+}
+
+interface DecryptOutputProps {
+  keyReady: boolean;
+  status: DecryptStatus;
+  result: TeachingDecryptResponse | null;
+  error: string | null;
+  onRetry?: () => void;
+  onEncryptAgain?: () => void;
+}
+
+function DecryptOutput({ keyReady, status, result, error, onRetry, onEncryptAgain }: DecryptOutputProps) {
+  const theme = modeTheme.decrypt;
+  const [copyStatus, setCopyStatus] = useState("");
+  const copyStatusId = useId();
+  const ready = status === "ready" && result !== null;
+
+  const handleCopy = async () => {
+    if (!result) return;
+    try {
+      const clipboard = navigator.clipboard;
+      if (!clipboard?.writeText) {
+        throw new Error("Clipboard unavailable");
+      }
+      await clipboard.writeText(result.message);
+      setCopyStatus("Message copied");
+      window.setTimeout(() => setCopyStatus(""), 2000);
+    } catch {
+      setCopyStatus("Couldn't copy message");
+      window.setTimeout(() => setCopyStatus(""), 2000);
+    }
+  };
+
+  return (
+    <StepCard
+      step={3}
+      title="Recovered message"
+      description="If the private key matches, your original text comes back"
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        {!keyReady || status === "idle" ? (
+          <WaitingRegion label="Recovered message output" />
+        ) : status === "empty" ? (
+          <div
+            role="region"
+            aria-label="Recovered message output"
+            className="flex min-h-48 flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-center text-sm text-gray-600"
+          >
+            Paste ciphertext to recover each character.
+          </div>
+        ) : status === "loading" ? (
+          <div
+            role="region"
+            aria-label="Recovered message output"
+            aria-busy="true"
+            className={`flex min-h-48 flex-1 items-center justify-center rounded-lg border p-3 text-sm text-gray-600 ${theme.tint} ${theme.border}`}
+          >
+            Decrypting…
+          </div>
+        ) : status === "invalid" || status === "error" ? (
+          <div role="alert" className="flex min-h-48 flex-1 flex-col justify-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p>{error}</p>
+            {status === "error" && onRetry && (
+              <button type="button" onClick={onRetry} className={`self-start ${secondaryButton}`}>
+                Try again
+              </button>
+            )}
+          </div>
+        ) : (
+          <div
+            role="region"
+            aria-label="Recovered message output"
+            tabIndex={0}
+            className={`min-h-48 flex-1 overflow-auto whitespace-pre-wrap break-all rounded-lg border p-3 text-sm ${theme.tint} ${theme.border} ${focusRing}`}
+          >
+            {result?.message}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p id={copyStatusId} role="status" aria-live="polite" className="text-sm text-gray-600">
+          {copyStatus}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleCopy}
+            disabled={!ready}
+            aria-describedby={copyStatusId}
+            className={`${secondaryButton} disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            Copy
+          </button>
+          <button
+            type="button"
+            onClick={onEncryptAgain}
+            disabled={!ready}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${modeTheme.encrypt.solid} ${focusRing} disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            Encrypt again →
           </button>
         </div>
       </div>

@@ -20,11 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loading, inline-validation, and API-failure (with retry) states that never clear the learner's inputs.
 - Frontend tests with Vitest, React Testing Library, and jsdom (`npm test`).
 - Live Encrypt learning flow: typing plaintext triggers a debounced `POST /teaching/encrypt`, and the ciphertext, worked example, and trace table update from one consistent response. Includes Clear, Copy, and **Decrypt this** (carries ciphertext into Decrypt mode).
+- Live Decrypt learning flow: pasting ciphertext triggers a debounced `POST /teaching/decrypt`, and the recovered message, worked example, and trace table update from one consistent response. Includes Clear, Copy, and **Encrypt again** (carries plaintext back into Encrypt mode).
 
 ### Changed
 - Expanded the root README with the importance of asymmetric encryption, a map from application actions to RSA concepts, and an explicit educational security boundary.
 - Corrected the backend architecture description so the demo's general-purpose random prime generation is not described as cryptographically secure.
-- The frontend derives keys through `POST /teaching/keys` and encrypts through `POST /teaching/encrypt` (both debounced, with stale responses discarded). Decrypt mode still shows sample data until live decryption is connected.
+- The frontend derives keys through `POST /teaching/keys`, encrypts through `POST /teaching/encrypt`, and decrypts through `POST /teaching/decrypt` (all debounced, with stale responses discarded).
 - The Encrypt and Decrypt inputs are kept separately and survive mode switches, along with the key pair.
 - Node.js 22.22+ or 24.15+ is now required for frontend development (Vitest and jsdom).
 - Production builds call the API on the same origin (Flask serves the built app); only `VITE_LOCAL_API_BASE_URL` is needed, for the dev server.

@@ -27,7 +27,7 @@ npm run dev
 
 The dev server runs at http://localhost:5173. Start the Flask backend first (`python app.py` from the repo root) so the key pair can be derived; without it, the key panel shows a "couldn't reach the key service" message with a Try again button.
 
-The app talks to the teaching-mode endpoints described in [Teaching-Mode RSA API](../docs/TEACHING-API.md). Key derivation (`POST /teaching/keys`) and Encrypt (`POST /teaching/encrypt`) are live. Decrypt mode still renders the shared sample fixture until live decryption is connected.
+The app talks to the teaching-mode endpoints described in [Teaching-Mode RSA API](../docs/TEACHING-API.md). Key derivation (`POST /teaching/keys`), Encrypt (`POST /teaching/encrypt`), and Decrypt (`POST /teaching/decrypt`) are all live.
 
 ## Environment Variables
 
@@ -62,13 +62,14 @@ src/
 │   ├── KeyPairPanel.tsx    # Step 1: presets, p/q/e fields, derived values, key cards, status
 │   ├── PresetPicker.tsx, KeyFieldInput.tsx, DerivedValues.tsx, KeyCard.tsx
 │   ├── MessagePanel.tsx    # Step 2: plaintext or ciphertext input
-│   ├── OutputPanel.tsx     # Step 3: live ciphertext (Copy, Decrypt this) or sample recovered message
+│   ├── OutputPanel.tsx     # Step 3: live ciphertext / recovered message (Copy, Decrypt this, Encrypt again)
 │   ├── HowItWorks.tsx      # Concept steps, worked example, trace table, teaching notice
 │   ├── ConceptStep.tsx, WorkedExample.tsx, TraceTable.tsx, TeachingModeNotice.tsx
 │   └── styles.ts           # Shared focus ring and mode colors
 ├── fixtures/teaching.ts    # Typed sample responses (p = 1009, q = 1013, e = 65537, "test")
 ├── hooks/useKeyPair.ts     # Presets, debounced POST /teaching/keys, stale-response guard
 ├── hooks/useEncrypt.ts     # Debounced POST /teaching/encrypt; empty skip; stale-response guard
+├── hooks/useDecrypt.ts     # Debounced POST /teaching/decrypt; empty/whitespace skip; stale-response guard
 ├── services/teachingAPI.ts # Typed client; 400s become TeachingValidationFailure
 ├── test/                   # Vitest setup and fake API helpers
 ├── types/teaching.ts       # Teaching-mode API types (RSA values as decimal strings)
@@ -81,10 +82,11 @@ src/
 
 Tests live next to the code they cover (`*.test.ts` / `*.test.tsx`) and run in jsdom:
 
-- `services/teachingAPI.test.ts`: request shape and error mapping for keys and encrypt.
+- `services/teachingAPI.test.ts`: request shape and error mapping for keys, encrypt, and decrypt.
 - `hooks/useKeyPair.test.ts`: presets, debouncing, stale responses, validation and network failures.
 - `hooks/useEncrypt.test.ts`: empty skip, debounce, stale responses, unsupported characters, retry.
-- `Workspace.test.tsx`: the rendered workspace, including live encrypt (fixture message, empty, unsupported, races, Copy, Clear, Decrypt this), presets, validation, mode switch, and layout classes.
+- `hooks/useDecrypt.test.ts`: empty/whitespace skip, debounce, stale responses, bad tokens, retry.
+- `Workspace.test.tsx`: the rendered workspace, including live encrypt and decrypt (fixtures, empty, validation, races, Copy, Clear, Decrypt this, Encrypt again), presets, mode switch, and layout classes.
 
 `App` accepts an optional `api` prop, so tests pass a fake instead of making HTTP requests.
 

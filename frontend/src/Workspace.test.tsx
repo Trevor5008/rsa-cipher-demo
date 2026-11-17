@@ -1,17 +1,18 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
-import { FIXTURE_ENCRYPT, FIXTURE_KEY } from "./fixtures/teaching";
+import { FIXTURE_DECRYPT, FIXTURE_ENCRYPT, FIXTURE_KEY } from "./fixtures/teaching";
 import { TeachingValidationFailure } from "./services/teachingAPI";
 import {
   TEXTBOOK_KEY,
   createFakeAPI,
   deferred,
+  decryptKnownText,
   deriveKnownKey,
   encryptKnownText,
 } from "./test/teachingFakes";
-import type { TeachingEncryptResponse, TeachingKey } from "./types/teaching";
+import type { TeachingDecryptResponse, TeachingEncryptResponse, TeachingKey } from "./types/teaching";
 
 const renderApp = (api = createFakeAPI()) => {
   const user = userEvent.setup();
@@ -36,6 +37,12 @@ const expectDerived = async (n: string, phi: string, d: string) => {
 const expectLiveCiphertext = async (display = FIXTURE_ENCRYPT.display) => {
   await waitFor(() => {
     expect(screen.getByRole("region", { name: "Ciphertext output" })).toHaveTextContent(display);
+  });
+};
+
+const expectLiveMessage = async (message = FIXTURE_DECRYPT.message) => {
+  await waitFor(() => {
+    expect(screen.getByRole("region", { name: "Recovered message output" })).toHaveTextContent(message);
   });
 };
 
@@ -330,8 +337,8 @@ describe("live encryption", () => {
     expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
       FIXTURE_ENCRYPT.display,
     );
-    expect(screen.getByRole("region", { name: "Recovered message output" })).toHaveTextContent("test");
-    expect(screen.getByRole("table", { name: "Decryption of each value (sample)" })).toBeInTheDocument();
+    await expectLiveMessage("test");
+    expect(await screen.findByRole("table", { name: "Decryption of each value" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Teaching mode" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "Encrypt" }));
@@ -371,8 +378,8 @@ describe("mode switch", () => {
     expect(within(keyCard("Public key")).queryByText("In use")).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Step 2: Paste ciphertext" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Step 3: Recovered message" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Recovered message output" })).toHaveTextContent("test");
-    expect(screen.getByRole("table", { name: "Decryption of each value (sample)" })).toBeInTheDocument();
+    await expectLiveMessage("test");
+    expect(await screen.findByRole("table", { name: "Decryption of each value" })).toBeInTheDocument();
     expect(screen.getByText("Using the private key")).toBeInTheDocument();
   });
 
@@ -388,7 +395,8 @@ describe("mode switch", () => {
     await user.click(screen.getByRole("radio", { name: "Decrypt" }));
     const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
     expect(ciphertext).toHaveValue("924799 621270 2637 924799");
-    expect(screen.getByText("4 numbers")).toBeInTheDocument();
+    // Textbook n is too small for the Bigger-primes fixture tokens → not a validated count.
+    await waitFor(() => expect(screen.getByText("4 tokens")).toBeInTheDocument());
     await user.clear(ciphertext);
     await user.type(ciphertext, "1 2");
 
@@ -433,5 +441,238 @@ describe("mode switch", () => {
     expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
       "924799 621270 2637 924799",
     );
+  });
+});
+
+describe("live decryption", () => {
+  it("decrypts the fixture ciphertext into test with a live worked example and table", async () => {
+    const { api, user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+
+    await expectLiveMessage("test");
+    expect(api.decrypt).toHaveBeenCalledWith(
+      FIXTURE_ENCRYPT.display,
+      "832193",
+      "1022117",
+      expect.any(AbortSignal),
+    );
+
+    const example = screen.getByText("Worked example: the first value, “924799”").closest("figure");
+    expect(example).toHaveTextContent("832193");
+    expect(example).toHaveTextContent("1022117");
+    expect(example).toHaveTextContent("116");
+    expect(example).toHaveTextContent("t");
+
+    const table = screen.getByRole("table", { name: "Decryption of each value" });
+    expect(within(table).getAllByRole("row")).toHaveLength(5);
+    expect(within(table).getAllByRole("row")[1]).toHaveTextContent("1924799116t");
+    expect(screen.queryByText(/^Sample$/)).not.toBeInTheDocument();
+  });
+
+  it("accepts mixed whitespace in pasted ciphertext", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
+    fireEvent.change(ciphertext, { target: { value: "924799\n621270\t2637  924799" } });
+
+    await expectLiveMessage("test");
+    expect(screen.getByText("4 numbers")).toBeInTheDocument();
+  });
+
+  it("shows an empty instructional state without calling decrypt when ciphertext is cleared", async () => {
+    const { api, user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+    api.decrypt.mockClear();
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+
+    expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue("");
+    expect(screen.getByRole("region", { name: "Recovered message output" })).toHaveTextContent(
+      "Paste ciphertext to recover each character.",
+    );
+    expect(screen.getByText(/worked example and table appear here once you paste/i)).toBeInTheDocument();
+    expect(derivedValue("n = p × q")).toHaveTextContent("1022117");
+    expect(api.decrypt).not.toHaveBeenCalled();
+  });
+
+  it("shows bad-token feedback without erasing the ciphertext or key", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
+    fireEvent.change(ciphertext, { target: { value: "924799 abc" } });
+
+    expect(await screen.findAllByText(/Value 2/)).not.toHaveLength(0);
+    expect(ciphertext).toHaveValue("924799 abc");
+    expect(ciphertext).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toHaveTextContent(/non-negative whole number/);
+    expect(screen.getByLabelText("Prime p")).toHaveValue("1009");
+    // Invalid input must not be presented as a validated decrypted number count.
+    expect(screen.queryByText("2 numbers")).not.toBeInTheDocument();
+    expect(screen.getByText("2 tokens")).toBeInTheDocument();
+  });
+
+  it("shows out-of-range feedback for values not smaller than n", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
+    fireEvent.change(ciphertext, { target: { value: "924799 1022117" } });
+
+    expect(await screen.findAllByText(/smaller than n = 1022117/)).not.toHaveLength(0);
+    expect(ciphertext).toHaveValue("924799 1022117");
+    expect(screen.getByRole("alert")).toHaveTextContent(/Value 2/);
+  });
+
+  it("shows inline feedback for negative ciphertext tokens", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
+    fireEvent.change(ciphertext, { target: { value: "924799 -1" } });
+
+    expect(await screen.findAllByText(/Value 2/)).not.toHaveLength(0);
+    expect(screen.getByRole("alert")).toHaveTextContent(/non-negative whole number/);
+    expect(ciphertext).toHaveValue("924799 -1");
+    expect(screen.queryByText("2 numbers")).not.toBeInTheDocument();
+    expect(screen.getByText("2 tokens")).toBeInTheDocument();
+  });
+
+  it("shows inline feedback when a value decrypts to an unsupported Unicode code point", async () => {
+    const api = createFakeAPI();
+    api.decrypt.mockRejectedValueOnce(
+      new TeachingValidationFailure([
+        {
+          field: "ciphertext",
+          code: "invalid_code_point",
+          message: "Value 1 decrypts to a number that is not a valid Unicode character.",
+          index: 1,
+        },
+      ]),
+    );
+    const { user } = renderApp(api);
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/not a valid Unicode character/);
+    expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
+      FIXTURE_ENCRYPT.display,
+    );
+    expect(screen.queryByText("4 numbers")).not.toBeInTheDocument();
+    expect(screen.getByText("4 tokens")).toBeInTheDocument();
+  });
+
+  it("ignores a late response for older ciphertext", async () => {
+    const first = deferred<TeachingDecryptResponse>();
+    const second = deferred<TeachingDecryptResponse>();
+    const api = createFakeAPI();
+    api.decrypt
+      .mockImplementationOnce(() => first.promise)
+      .mockImplementationOnce(() => second.promise)
+      .mockImplementation(decryptKnownText);
+
+    const { user } = renderApp(api);
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await screen.findByText("Decrypting…");
+    const firstSignal = api.decrypt.mock.calls[0][3] as AbortSignal;
+
+    const ciphertext = screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key");
+    fireEvent.change(ciphertext, { target: { value: "" } });
+    await screen.findByText("Paste ciphertext to recover each character.");
+    expect(firstSignal.aborted).toBe(true);
+
+    fireEvent.change(ciphertext, { target: { value: "1 2" } });
+    await waitFor(() => expect(api.decrypt).toHaveBeenCalledTimes(2));
+    await screen.findByText("Decrypting…");
+
+    const latest: TeachingDecryptResponse = {
+      message: "ab",
+      trace: [
+        { index: 1, ciphertext: "1", codePoint: "97", character: "a" },
+        { index: 2, ciphertext: "2", codePoint: "98", character: "b" },
+      ],
+    };
+    await act(async () => {
+      second.resolve(latest);
+      first.resolve(FIXTURE_DECRYPT);
+    });
+
+    await expectLiveMessage("ab");
+    const table = screen.getByRole("table", { name: "Decryption of each value" });
+    expect(within(table).getAllByRole("row")[1]).toHaveTextContent("1197a");
+    expect(within(table).getAllByRole("row")[2]).toHaveTextContent("2298b");
+  });
+
+  it("copies only the recovered message and announces success without moving focus", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      writable: true,
+      value: { writeText },
+    });
+
+    const copy = screen.getByRole("button", { name: "Copy" });
+    expect(copy).toBeEnabled();
+    copy.focus();
+    fireEvent.click(copy);
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("test"));
+    expect(screen.getByText("Message copied")).toBeInTheDocument();
+    expect(document.activeElement).toBe(copy);
+  });
+
+  it("Encrypt again switches to Encrypt mode and carries the recovered plaintext", async () => {
+    const { user } = renderApp();
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    await expectLiveMessage("test");
+
+    await user.click(screen.getByRole("button", { name: "Encrypt again →" }));
+
+    expect(screen.getByRole("radio", { name: "Encrypt" })).toBeChecked();
+    expect(screen.getByLabelText("Plain text to encrypt with the public key")).toHaveValue("test");
+    await expectLiveCiphertext();
+
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+    expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
+      FIXTURE_ENCRYPT.display,
+    );
+  });
+
+  it("reports decrypt request failures with retry and keeps the ciphertext", async () => {
+    const api = createFakeAPI();
+    api.decrypt.mockRejectedValueOnce(new Error("Network Error"));
+    const { user } = renderApp(api);
+    await expectLiveCiphertext();
+    await user.click(screen.getByRole("radio", { name: "Decrypt" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("couldn't decrypt");
+    expect(screen.getByLabelText("Numbers separated by spaces, to decrypt with the private key")).toHaveValue(
+      FIXTURE_ENCRYPT.display,
+    );
+    expect(screen.getByLabelText("Prime p")).toHaveValue("1009");
+
+    await user.click(within(alert).getByRole("button", { name: "Try again" }));
+    await expectLiveMessage("test");
   });
 });
