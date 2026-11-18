@@ -34,6 +34,7 @@
 - [Educational Features](#educational-features)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
+- [Deploy from GitHub](#deploy-from-github)
 - [Learning Objectives](#learning-objectives)
 - [Technical Architecture](#technical-architecture)
 - [Contributing](#contributing)
@@ -223,6 +224,30 @@ Run these from the `frontend/` directory:
 | `npm run preview` | Preview the production build locally |
 | `npm test` | Run the component and unit tests once with Vitest |
 | `npm run test:watch` | Run Vitest in watch mode |
+
+## Deploy from GitHub
+
+This app is a **Flask + gunicorn monolith** that serves `frontend/dist` and the `/teaching/*` API on the same origin. That shape matches a long-running Python host, not a static/serverless frontend platform.
+
+**Vercel:** not a good fit as-is. A Vercel-only static deploy would break live key derivation and encrypt/decrypt unless you split the API onto another host and reintroduce a production API base URL and CORS. Prefer keeping one service.
+
+**Recommended host: [Render](https://render.com)** (Blueprint in [`render.yaml`](render.yaml)).
+
+1. Push this repository to GitHub (already the case for `Trevor5008/rsa-cipher-demo`).
+2. In the Render dashboard: **New → Blueprint**, connect the GitHub repo, and apply `render.yaml`.
+3. Render runs [`scripts/build-production.sh`](scripts/build-production.sh) (install Python deps, `npm ci` + `npm run build` in `frontend/`), then starts `gunicorn --bind 0.0.0.0:$PORT app:app`.
+4. Open the public `onrender.com` URL and run the teaching walkthrough (Bigger primes → encrypt `test` → **Decrypt this**).
+
+Local production smoke (same recipe as Render, without the public URL):
+
+```sh
+./scripts/build-production.sh
+source venv/bin/activate   # or another env with requirements.txt installed
+PORT=5000 gunicorn --bind 0.0.0.0:$PORT app:app
+# then visit http://127.0.0.1:5000/
+```
+
+No production env vars are required for the teaching UI: API calls use the same origin.
 
 ## Learning Objectives
 
