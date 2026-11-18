@@ -34,7 +34,7 @@ export default function KeyPairPanel({ keyPair, mode }: KeyPairPanelProps) {
       <PresetPicker selected={presetId} onSelect={selectPreset} />
 
       <div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
           {FIELDS.map(({ field, label }) => (
             <KeyFieldInput
               key={field}

@@ -72,6 +72,15 @@ describe("guided workspace layout", () => {
     for (const card of cards) {
       expect(card).toHaveClass("min-w-0");
     }
+
+    const keyFields = screen.getByLabelText("Prime p").closest(".grid") as HTMLElement;
+    expect(keyFields).toHaveClass("grid-cols-1", "md:grid-cols-3");
+  });
+
+  it("announces when ciphertext is ready", async () => {
+    renderApp();
+    await expectLiveCiphertext();
+    expect(await screen.findByText("Ciphertext updated")).toBeInTheDocument();
   });
 
   it("keeps long integers inside their own regions", async () => {
@@ -451,6 +460,7 @@ describe("live decryption", () => {
     await user.click(screen.getByRole("radio", { name: "Decrypt" }));
 
     await expectLiveMessage("test");
+    expect(await screen.findByText("Message recovered")).toBeInTheDocument();
     expect(api.decrypt).toHaveBeenCalledWith(
       FIXTURE_ENCRYPT.display,
       "832193",

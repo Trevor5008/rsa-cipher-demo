@@ -103,7 +103,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 
 ### Phase 2: Student-Focused Redesign (In Progress)
 - **Educational Onboarding** - Welcome screen with learning objectives
-- **Step-by-Step Interface** - Replace modal-heavy design with guided learning flow (guided workspace, key-pair panel, and live Encrypt/Decrypt done; final a11y/responsive acceptance remains)
+- **Step-by-Step Interface** - Guided workspace with key-pair panel, live Encrypt/Decrypt, and responsive/accessibility acceptance ([evidence](docs/acceptance/story-26-responsive-a11y.md))
 - **Concept Explanations** - Add educational content before each section
 - **Visual Learning Aids** - Mathematical formulas, diagrams, and interactive elements
 - **Progress Tracking** - Show students where they are in the learning journey
@@ -125,6 +125,7 @@ These limitations make the arithmetic easier to inspect, but textbook RSA is ins
 - **Live Encrypt Trace** - Ciphertext, worked example, and per-character table update as you type; Clear, Copy, and Decrypt this hand off into Decrypt mode
 - **Live Decrypt Trace** - Recovered message, worked example, and per-value table update as you paste; Clear, Copy, and Encrypt again hand off back into Encrypt mode
 - **How It Works** - Concept steps, a worked modular-exponentiation example, and a per-character/value trace table that updates live in both modes
+- **Responsive & accessible workspace** - Stacks on narrow viewports, keyboard operable, live status for results/copy/errors; acceptance evidence in `docs/acceptance/story-26-responsive-a11y.md`
 - **RSA Foundations Guide** - Connect the demo to asymmetric encryption, hybrid systems, the RSA equations, and production limitations
 
 ### Planned Learning Enhancements
@@ -244,6 +245,7 @@ After using this tool, students will understand:
 - **Key Validation** - Mathematical validation of key pairs
 - **RESTful API** - Clean endpoints for frontend communication
 - **Teaching-Mode API** - `/teaching/keys`, `/teaching/encrypt`, and `/teaching/decrypt` return every intermediate value and a per-character trace for the learning UI; see [Teaching-Mode RSA API](docs/TEACHING-API.md)
+- **Legacy endpoints (deprecated)** - Whole-message `/submit-keys`, `/encrypt`, `/decrypt`, and related routes remain for compatibility and regression tests; the UI does not call them
 - **Backend Tests** - `pytest` suite covering the teaching API and the legacy endpoints (`tests/`)
 
 ### Frontend (React + TypeScript + Vite)

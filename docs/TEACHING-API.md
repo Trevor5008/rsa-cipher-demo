@@ -178,4 +178,6 @@ pytest
 
 ## Relationship to the legacy endpoints
 
-The original endpoints (`/submit-keys`, `/encrypt`, `/decrypt`, `/validate-prime`, `/generate-primes/...`) are unchanged and still power the current UI. They encode the **whole** ASCII message as a single integer, so they cannot produce a per-character trace and reject messages whose encoding is not smaller than $n$. The teaching endpoints are additive; `tests/test_legacy_endpoints.py` guards the legacy behavior so the two can coexist until the redesigned UI moves over.
+The redesigned learning UI uses the teaching endpoints (`/teaching/keys`, `/teaching/encrypt`, `/teaching/decrypt`) exclusively.
+
+The original endpoints (`/submit-keys`, `/encrypt`, `/decrypt`, `/validate-prime`, `/generate-primes/...`) remain available for compatibility and regression tests, but they are **deprecated** for new clients. They encode the **whole** ASCII message as a single integer, so they cannot produce a per-character trace and reject messages whose encoding is not smaller than $n$. `tests/test_legacy_endpoints.py` continues to guard that behavior so the deprecated routes do not change silently.

@@ -73,6 +73,8 @@ function EncryptOutput({ keyReady, status, result, error, onRetry, onDecryptThis
   const [copyStatus, setCopyStatus] = useState("");
   const copyStatusId = useId();
   const ready = status === "ready" && result !== null;
+  const resultAnnouncement = ready ? "Ciphertext updated" : "";
+  const liveStatus = copyStatus || resultAnnouncement;
 
   const handleCopy = async () => {
     if (!result) return;
@@ -139,7 +141,7 @@ function EncryptOutput({ keyReady, status, result, error, onRetry, onDecryptThis
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p id={copyStatusId} role="status" aria-live="polite" className="text-sm text-gray-600">
-          {copyStatus}
+          {liveStatus}
         </p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -179,6 +181,8 @@ function DecryptOutput({ keyReady, status, result, error, onRetry, onEncryptAgai
   const [copyStatus, setCopyStatus] = useState("");
   const copyStatusId = useId();
   const ready = status === "ready" && result !== null;
+  const resultAnnouncement = ready ? "Message recovered" : "";
+  const liveStatus = copyStatus || resultAnnouncement;
 
   const handleCopy = async () => {
     if (!result) return;
@@ -245,7 +249,7 @@ function DecryptOutput({ keyReady, status, result, error, onRetry, onEncryptAgai
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p id={copyStatusId} role="status" aria-live="polite" className="text-sm text-gray-600">
-          {copyStatus}
+          {liveStatus}
         </p>
         <div className="flex flex-wrap gap-2">
           <button
