@@ -87,8 +87,11 @@ Tests live next to the code they cover (`*.test.ts` / `*.test.tsx`) and run in j
 - `hooks/useEncrypt.test.ts`: empty skip, debounce, stale responses, unsupported characters, retry.
 - `hooks/useDecrypt.test.ts`: empty/whitespace skip, debounce, stale responses, bad tokens, retry.
 - `Workspace.test.tsx`: the rendered workspace, including live encrypt and decrypt (fixtures, empty, validation, races, Copy, Clear, Decrypt this, Encrypt again), presets, mode switch, and layout classes.
+- `a11y.test.tsx`: `axe-core` scans of Encrypt and Decrypt ready states; fails on serious/critical violations (`test/axe.ts`).
 
 `App` accepts an optional `api` prop, so tests pass a fake instead of making HTTP requests.
+
+Acceptance evidence for responsive and keyboard use lives in [`docs/acceptance/story-26-responsive-a11y.md`](../docs/acceptance/story-26-responsive-a11y.md).
 
 ## TypeScript Configuration
 

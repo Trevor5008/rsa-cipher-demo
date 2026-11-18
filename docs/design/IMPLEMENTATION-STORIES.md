@@ -253,17 +253,17 @@ As a learner using a laptop, phone-sized viewport, keyboard, or assistive techno
 
 ### Acceptance criteria
 
-- [ ] The canonical walkthrough passes in the production build on the supported desktop browser and a 375–430 px viewport.
-- [ ] The layout has no page-level horizontal overflow, overlapping controls, clipped validation, or unreadable long-number regions.
-- [ ] The complete workflow is keyboard operable with visible focus and logical focus order.
-- [ ] Mode, active key, loading, errors, copy success, and updated results are programmatically conveyed without relying only on color.
-- [ ] Automated accessibility checks report no serious or critical violations on Encrypt and Decrypt states.
-- [ ] Backend and frontend automated suites, typecheck, lint, and production build pass.
-- [ ] Legacy endpoints are either retained with a documented reason or removed only after confirming the accepted UI no longer depends on them.
-- [ ] Issue #17 is closed or rewritten to contain only behavior still missing after the redesign.
-- [ ] Issue #20 links the completed audit evidence and any separately scoped findings.
-- [ ] Design references, architecture documentation, README, and changelog match the delivered behavior.
-- [ ] Defects discovered here return to Stories 1–4 or become separate follow-ups; this story does not silently absorb feature development.
+- [x] The canonical walkthrough passes in the production build on the supported desktop browser and a 375–430 px viewport.
+- [x] The layout has no page-level horizontal overflow, overlapping controls, clipped validation, or unreadable long-number regions.
+- [x] The complete workflow is keyboard operable with visible focus and logical focus order.
+- [x] Mode, active key, loading, errors, copy success, and updated results are programmatically conveyed without relying only on color.
+- [x] Automated accessibility checks report no serious or critical violations on Encrypt and Decrypt states.
+- [x] Backend and frontend automated suites, typecheck, lint, and production build pass.
+- [x] Legacy endpoints are either retained with a documented reason or removed only after confirming the accepted UI no longer depends on them.
+- [x] Issue #17 is closed or rewritten to contain only behavior still missing after the redesign.
+- [x] Responsive and accessibility evidence is recorded for GitHub issue #26 (`docs/acceptance/story-26-responsive-a11y.md`). Issue #20 was deleted; #26 owns the evidence directly.
+- [x] Design references, architecture documentation, README, and changelog match the delivered behavior.
+- [x] Defects discovered here return to Stories 1–4 or become separate follow-ups; this story does not silently absorb feature development.
 
 ## Dependency Order
 
@@ -295,5 +295,5 @@ These are grooming estimates, not commitments. Confirm ownership, implementation
 
 ## Existing-Issue Reconciliation
 
-- **#17 — Mobile vs Laptop functionality:** overlaps with Stories 2–5. Keep it open as a linked legacy finding until the redesigned workflow is accepted; then close it or narrow it to any remaining behavior.
-- **#20 — UX & accessibility audit: issue card template:** retain as the audit umbrella. Link Story 5 evidence and create separate findings only for defects not already owned by Stories 2–4.
+- **#17 — Mobile vs Laptop functionality:** overlaps with Stories 2–5. Closed after Story 5 / #26 acceptance: mode-scoped Clear/Copy and the responsive guided workspace cover the original concern.
+- **#20 — UX & accessibility audit: issue card template:** deleted on GitHub. Evidence for Story 5 lives on **#26** and in `docs/acceptance/story-26-responsive-a11y.md` instead of a separate audit umbrella.
