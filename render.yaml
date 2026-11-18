@@ -1,0 +1,17 @@
+# Render Blueprint: one web service that builds the Vite app, then serves it
+# with gunicorn (same origin for /teaching/*). Not a Vercel deploy.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: rsa-learning-lab
+    runtime: python
+    plan: free
+    buildCommand: ./scripts/build-production.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    healthCheckPath: /
+    envVars:
+      # Node is required at build time to produce frontend/dist.
+      - key: NODE_VERSION
+        value: "22.22.3"
+      - key: PYTHON_VERSION
+        value: "3.12.8"

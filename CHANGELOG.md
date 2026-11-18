@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Live Encrypt learning flow: typing plaintext triggers a debounced `POST /teaching/encrypt`, and the ciphertext, worked example, and trace table update from one consistent response. Includes Clear, Copy, and **Decrypt this** (carries ciphertext into Decrypt mode).
 - Live Decrypt learning flow: pasting ciphertext triggers a debounced `POST /teaching/decrypt`, and the recovered message, worked example, and trace table update from one consistent response. Includes Clear, Copy, and **Encrypt again** (carries plaintext back into Encrypt mode).
 - Responsive and accessibility acceptance for the redesigned workspace: production walkthrough evidence in `docs/acceptance/story-26-responsive-a11y.md`, Vitest `axe-core` checks for Encrypt and Decrypt ready states, polite live announcements when ciphertext or recovered message updates, and key fields that stack below the `md` breakpoint.
+- Render Blueprint deploy from GitHub ([`render.yaml`](render.yaml), [`scripts/build-production.sh`](scripts/build-production.sh)): build the Vite app into `frontend/dist`, then serve UI and `/teaching/*` with gunicorn on `$PORT`. README documents why Vercel is not a natural fit for this monolith.
 
 ### Changed
 - Expanded the root README with the importance of asymmetric encryption, a map from application actions to RSA concepts, and an explicit educational security boundary.
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Node.js 22.22+ or 24.15+ is now required for frontend development (Vitest and jsdom).
 - Production builds call the API on the same origin (Flask serves the built app); only `VITE_LOCAL_API_BASE_URL` is needed, for the dev server.
 - Legacy whole-message endpoints are retained for compatibility and regression tests but documented as deprecated; the learning UI uses `/teaching/*` only.
+- `Procfile` binds gunicorn to `0.0.0.0:$PORT` so cloud hosts (Render and Heroku-style platforms) accept external traffic.
 
 ### Removed
 - The modal-first frontend: `KeysModal`, `TextModal`, `TextOutput`, the custom SVG icons, the `useModals`/`useRSAKeys`/`useTextProcessing`/`useUI` hooks, the legacy `rsaAPI` client and its types, and the prime-generation controls. The legacy backend endpoints remain available (deprecated).
